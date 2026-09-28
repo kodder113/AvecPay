@@ -1,7 +1,7 @@
--- AvicPay initial schema.
+-- AvecPay initial schema.
 --
 -- Design notes
--- * AvicPay never custodies funds. `transfers` records an off-ramp order that
+-- * AvecPay never custodies funds. `transfers` records an off-ramp order that
 --   lives at a payout provider (MoonPay first). The provider issues the deposit
 --   address; the sender pays it directly from their own wallet.
 -- * Status and deposit fields are written only by the server (service role),
@@ -98,7 +98,7 @@ create table public.transfers (
   est_exchange_rate numeric(36, 8),
   est_provider_fee numeric(36, 8),
   est_network_fee numeric(36, 8),
-  est_avicpay_fee numeric(36, 8),
+  est_avecpay_fee numeric(36, 8),
   quote_raw jsonb,
 
   -- Recipient claim link (secret, unguessable)

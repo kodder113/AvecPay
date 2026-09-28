@@ -12,7 +12,7 @@ Items are in the order you'll need them.
 
 ## 1. MoonPay partner account (business / KYB)
 
-- Apply at **moonpay.com/business** and complete business verification (KYB) for the AvicPay entity.
+- Apply at **moonpay.com/business** and complete business verification (KYB) for the AvecPay entity.
 - Ask for the **Off-Ramp (Sell) product** to be enabled on your account. It is a separate product from On-Ramp (Buy) and may not be on by default.
 
 ## 2. Sandbox credentials (needed now, for the sandbox flow)
@@ -29,17 +29,17 @@ Also in the dashboard (test mode):
 
 - **Allowed domains / redirect URLs:** add the app's public HTTPS origin (Vercel preview or an ngrok URL). MoonPay's `redirectURL` must be HTTPS.
 - **Webhook endpoint:** `https://<your-app>/api/webhooks/moonpay`. Subscribe to the **sell transaction** events (created / updated / completed / failed).
-- **URL signing:** turn it on. AvicPay always signs widget URLs.
+- **URL signing:** turn it on. AvecPay always signs widget URLs.
 
 ## 3. Written answers from your MoonPay account manager
 
 These decide whether the product works as designed. The app is built to *read* these from MoonPay's API where it can. The first one can only be answered by MoonPay.
 
-1. **Third-party funding (the most important one).** In AvicPay, the MoonPay customer is the *recipient* (Christian): he does KYC and owns the sell order and the payout card. The *sender* sends the USDT to that order's deposit address from their own wallet. MoonPay's sell product normally assumes customers sell crypto they hold themselves. **Ask MoonPay to confirm in writing that a sell order may be funded from a third party's wallet, and whether they need sender information (Travel Rule / originator data).** If they say no, the flow has to change (for example, the recipient receives USDT into a wallet first and then sells). The provider abstraction allows for that, but it's a different product.
-2. **Honduras.** Is `isSellAllowed` true for HN on your account? Are card payouts via Visa Direct available to **Honduran-issued Visa debit cards**? Which fiat currency does a Honduran card get paid in? Don't assume HNL; AvicPay shows whatever MoonPay returns.
+1. **Third-party funding (the most important one).** In AvecPay, the MoonPay customer is the *recipient* (Christian): he does KYC and owns the sell order and the payout card. The *sender* sends the USDT to that order's deposit address from their own wallet. MoonPay's sell product normally assumes customers sell crypto they hold themselves. **Ask MoonPay to confirm in writing that a sell order may be funded from a third party's wallet, and whether they need sender information (Travel Rule / originator data).** If they say no, the flow has to change (for example, the recipient receives USDT into a wallet first and then sells). The provider abstraction allows for that, but it's a different product.
+2. **Honduras.** Is `isSellAllowed` true for HN on your account? Are card payouts via Visa Direct available to **Honduran-issued Visa debit cards**? Which fiat currency does a Honduran card get paid in? Don't assume HNL; AvecPay shows whatever MoonPay returns.
 3. **USDT networks and minimums.** Which USDT variants are sell-enabled for your account (for example `usdt_trx`, `usdt_polygon`, `usdt` on ERC-20), and what are `minSellAmount` and `maxSellAmount`? **If MoonPay's minimum sell is above 10 USDT, the $10 test can't run as specified.** The preflight script below tells you right away.
 4. **Sell widget parameters.** Confirm these are honoured for sells on your account: `externalTransactionId`, `refundWalletAddress`, `lockAmount`, `paymentMethod=credit_debit_card`, `quoteCurrencyCode`, `email`, `redirectURL`.
-5. **Partner fee on sells.** If AvicPay will charge a fee, confirm that `extraFeePercentage` works on sell quotes and sell orders, and how MoonPay settles it to you. Until then, keep `AVICPAY_FEE_PERCENT=0`.
+5. **Partner fee on sells.** If AvecPay will charge a fee, confirm that `extraFeePercentage` works on sell quotes and sell orders, and how MoonPay settles it to you. Until then, keep `AVECPAY_FEE_PERCENT=0`.
 6. **Headless or API-created sell orders (optional).** Ask whether they offer a server-side way to create the sell order and deposit address, instead of only through the hosted widget. The MVP uses the widget, which is the documented path.
 7. **Sandbox coverage.** Which USDT assets support test mode in sandbox, and can a sandbox sell reach the card-payout step? The sandbox uses test networks and doesn't pay real cards.
 
@@ -58,7 +58,7 @@ The app refuses to start if live keys are used with `MOONPAY_ENV=sandbox`, or th
 - **Public HTTPS URL** for `NEXT_PUBLIC_APP_URL`. MoonPay redirects and webhooks need one.
 - **A sender wallet** holding a little more than 10 USDT on a network MoonPay sell-enables, plus that network's gas token (TRX on Tron, POL on Polygon, ETH on Ethereum).
 - **Christian:** a government ID MoonPay accepts, an eligible Visa debit card, and access to his email.
-- **Legal:** AvicPay doesn't custody funds or convert them. It does coordinate payments, and it may charge a fee. Get US counsel to confirm AvicPay's licensing position (for example, money-transmission analysis) before the fee goes live.
+- **Legal:** AvecPay doesn't custody funds or convert them. It does coordinate payments, and it may charge a fee. Get US counsel to confirm AvecPay's licensing position (for example, money-transmission analysis) before the fee goes live.
 
 ---
 
@@ -71,7 +71,7 @@ cp .env.example .env.local   # fill in the keys
 npm run moonpay:check -- --country HN --amount 10
 ```
 
-This prints what MoonPay says: whether selling is allowed in HN, the USDT networks with their min and max, the sell-enabled fiat currencies, and a live quote for each one (rate, MoonPay fee, network fee, AvicPay fee, recipient amount). If it prints BLOCKERS, stop and resolve them with MoonPay.
+This prints what MoonPay says: whether selling is allowed in HN, the USDT networks with their min and max, the sell-enabled fiat currencies, and a live quote for each one (rate, MoonPay fee, network fee, AvecPay fee, recipient amount). If it prints BLOCKERS, stop and resolve them with MoonPay.
 
 ### B. Sandbox end to end
 
@@ -84,4 +84,4 @@ This prints what MoonPay says: whether selling is allowed in HN, the USDT networ
 
 ### C. Live $10 test
 
-Do the same steps with live keys, a real 10 USDT, and Christian doing the recipient steps on his phone. Only send USDT after the deposit address appears in AvicPay. Send the exact amount, on the exact network shown.
+Do the same steps with live keys, a real 10 USDT, and Christian doing the recipient steps on his phone. Only send USDT after the deposit address appears in AvecPay. Send the exact amount, on the exact network shown.

@@ -239,7 +239,7 @@ export class MoonPayProvider implements PayoutProvider {
       grossFiatAmount: exchangeRate != null ? round(cryptoAmount * exchangeRate, 2) : null,
       providerFee: num(q.feeAmount),
       networkFee: num(q.networkFeeAmount),
-      avicpayFee: req.fee.percent > 0 ? num(q.extraFeeAmount) : 0,
+      avecpayFee: req.fee.percent > 0 ? num(q.extraFeeAmount) : 0,
       recipientAmount: num(q.quoteCurrencyAmount),
       payoutMethod: (q.payoutMethod as string | undefined) ?? req.payoutMethod,
       raw: q,

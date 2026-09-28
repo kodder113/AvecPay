@@ -56,7 +56,7 @@ export default async function TransferPage({ params }: { params: Promise<{ id: s
             <CopyButton value={claimUrl} label="Copy link" />
           </div>
           {recipient?.email && (
-            <a className="text-sm text-brand-700 underline" href={`mailto:${recipient.email}?subject=${encodeURIComponent("You have money waiting on AvicPay")}&body=${encodeURIComponent(claimUrl)}`}>
+            <a className="text-sm text-brand-700 underline" href={`mailto:${recipient.email}?subject=${encodeURIComponent("You have money waiting on AvecPay")}&body=${encodeURIComponent(claimUrl)}`}>
               Email it to {recipient.email}
             </a>
           )}
@@ -127,7 +127,7 @@ export default async function TransferPage({ params }: { params: Promise<{ id: s
             exchangeRate: t.est_exchange_rate,
             providerFee: t.est_provider_fee,
             networkFee: t.est_network_fee,
-            avicpayFee: t.est_avicpay_fee,
+            avecpayFee: t.est_avecpay_fee,
             recipientAmount: t.est_fiat_amount,
             providerName: "MoonPay",
           }}

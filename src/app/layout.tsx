@@ -4,7 +4,7 @@ import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "AvicPay",
+  title: "AvecPay",
   description: "Send USDT, your recipient gets paid in local fiat via regulated off-ramp partners.",
 };
 
@@ -28,7 +28,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <header className="border-b border-slate-200 bg-white">
           <nav className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
             <Link href={user ? "/dashboard" : "/"} className="text-lg font-bold text-brand-700">
-              AvicPay
+              AvecPay
             </Link>
             {user ? (
               <div className="flex items-center gap-3 text-sm">

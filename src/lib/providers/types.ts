@@ -1,8 +1,8 @@
 import type { TransferStatus } from "@/lib/status";
-import type { AvicPayFeePolicy } from "@/lib/fees";
+import type { AvecPayFeePolicy } from "@/lib/fees";
 
 /**
- * Provider abstraction. AvicPay talks to off-ramp providers only through this
+ * Provider abstraction. AvecPay talks to off-ramp providers only through this
  * interface so that providers other than MoonPay can be added later.
  *
  * Everything returned here must come from the provider itself. Adapters must
@@ -42,7 +42,7 @@ export interface QuoteRequest {
   cryptoAmount: number;
   fiatCurrency: string;
   payoutMethod: string;
-  fee: AvicPayFeePolicy;
+  fee: AvecPayFeePolicy;
 }
 
 export interface Quote {
@@ -56,7 +56,7 @@ export interface Quote {
   grossFiatAmount: number | null;
   providerFee: number | null;
   networkFee: number | null;
-  avicpayFee: number | null;
+  avecpayFee: number | null;
   /** Estimated fiat the recipient receives, as reported by the provider. */
   recipientAmount: number | null;
   payoutMethod: string;
@@ -72,14 +72,14 @@ export interface RecipientSessionRequest {
   refundWalletAddress: string;
   recipientEmail: string | null;
   redirectUrl: string;
-  fee: AvicPayFeePolicy;
+  fee: AvecPayFeePolicy;
 }
 
-/** Provider order state normalized into AvicPay terms. */
+/** Provider order state normalized into AvecPay terms. */
 export interface ProviderOrder {
   providerTransactionId: string;
   createdAt: string | null;
-  /** AvicPay transfer id echoed back by the provider. */
+  /** AvecPay transfer id echoed back by the provider. */
   externalTransactionId: string | null;
   status: TransferStatus;
   providerStatus: string;
@@ -115,7 +115,7 @@ export interface PayoutProvider {
    */
   createRecipientSessionUrl(req: RecipientSessionRequest): string;
   getOrder(providerTransactionId: string): Promise<ProviderOrder>;
-  /** All provider orders tagged with this AvicPay transfer id, oldest first. */
+  /** All provider orders tagged with this AvecPay transfer id, oldest first. */
   listOrdersByTransferId(transferId: string): Promise<ProviderOrder[]>;
   handleWebhook(rawBody: string, headers: Headers): Promise<WebhookResult>;
 }

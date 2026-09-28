@@ -35,7 +35,7 @@ function LoginForm() {
 
   return (
     <form onSubmit={submit} className="card space-y-4">
-      <h1 className="text-xl font-semibold">Sign in or create your AvicPay account</h1>
+      <h1 className="text-xl font-semibold">Sign in or create your AvecPay account</h1>
       <div>
         <label className="label" htmlFor="email">Email</label>
         <input id="email" type="email" required className="input" value={email} onChange={(e) => setEmail(e.target.value)} />

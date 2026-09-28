@@ -8,7 +8,7 @@ import { getFeePolicy } from "@/lib/fees";
 import { handleRouteError, jsonError } from "@/lib/http";
 
 /**
- * Creates an AvicPay transfer. The quote is re-fetched server-side; the
+ * Creates an AvecPay transfer. The quote is re-fetched server-side; the
  * client's numbers are never trusted. The provider order (and its deposit
  * address) is created later, when the recipient completes the provider flow.
  */
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
         est_exchange_rate: quote.exchangeRate,
         est_provider_fee: quote.providerFee,
         est_network_fee: quote.networkFee,
-        est_avicpay_fee: quote.avicpayFee,
+        est_avecpay_fee: quote.avecpayFee,
         quote_raw: quote.raw,
         claim_token: claimToken,
       })

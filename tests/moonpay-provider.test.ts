@@ -53,7 +53,7 @@ describe("MoonPayProvider.getCorridor", () => {
 });
 
 describe("MoonPayProvider.getQuote", () => {
-  it("passes the AvicPay fee as MoonPay's partner fee and maps the response", async () => {
+  it("passes the AvecPay fee as MoonPay's partner fee and maps the response", async () => {
     const { f, calls } = fakeFetch({
       "/v3/currencies/usdt_trx/sell_quote": {
         baseCurrencyAmount: 10,
@@ -74,7 +74,7 @@ describe("MoonPayProvider.getQuote", () => {
     const url = new URL(calls[0]);
     expect(url.searchParams.get("extraFeePercentage")).toBe("1");
     expect(url.searchParams.get("payoutMethod")).toBe("credit_debit_card");
-    expect(q).toMatchObject({ exchangeRate: 0.999, grossFiatAmount: 9.99, providerFee: 0.5, avicpayFee: 0.1, recipientAmount: 9.38, fiatCurrency: "usd" });
+    expect(q).toMatchObject({ exchangeRate: 0.999, grossFiatAmount: 9.99, providerFee: 0.5, avecpayFee: 0.1, recipientAmount: 9.38, fiatCurrency: "usd" });
   });
 });
 

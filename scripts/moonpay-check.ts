@@ -53,7 +53,7 @@ async function main() {
       try {
         const q = await mp.getQuote({ assetCode: asset.code, cryptoAmount: amount, fiatCurrency: fiat.code, payoutMethod: cfg.payoutMethod, fee: getFeePolicy() });
         console.log(
-          `  ${asset.code} -> ${q.fiatCurrency}: rate ${q.exchangeRate} · MoonPay fee ${q.providerFee} · network fee ${q.networkFee ?? "n/a"} · AvicPay fee ${q.avicpayFee} · recipient gets ${q.recipientAmount} ${q.fiatCurrency}`,
+          `  ${asset.code} -> ${q.fiatCurrency}: rate ${q.exchangeRate} · MoonPay fee ${q.providerFee} · network fee ${q.networkFee ?? "n/a"} · AvecPay fee ${q.avecpayFee} · recipient gets ${q.recipientAmount} ${q.fiatCurrency}`,
         );
       } catch (e) {
         console.log(`  ${asset.code} -> ${fiat.code}: ${(e as Error).message}`);
