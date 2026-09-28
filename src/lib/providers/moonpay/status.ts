@@ -1,7 +1,7 @@
 import type { TransferStatus } from "@/lib/status";
 
 /**
- * Maps a MoonPay sell transaction to AvecPay's lifecycle.
+ * Maps a MoonPay sell transaction to Avec Pay's lifecycle.
  *
  * MoonPay documents four sell statuses: waitingForDeposit, pending, completed,
  * failed. `depositHash` is set once MoonPay has received the deposit.
@@ -13,7 +13,7 @@ import type { TransferStatus } from "@/lib/status";
  *   failed                       -> failed
  *
  * MoonPay does not report a separate "payout initiated" state for sells, so
- * AvecPay records payout_initiated and completed together when MoonPay reports
+ * Avec Pay records payout_initiated and completed together when MoonPay reports
  * completion (see transitionPath). Card arrival can lag completion; MoonPay
  * quotes minutes to 2 business days.
  */

@@ -1,15 +1,15 @@
-# AvecPay (MVP)
+# Avec Pay (MVP)
 
 A sender pays in crypto (USDT to start). The recipient gets fiat through a regulated off-ramp partner (MoonPay to start), paid to an eligible Visa debit card where MoonPay supports card payouts (Visa Direct).
 
-**AvecPay never custodies funds and never converts crypto.** MoonPay runs KYC, issues the deposit address, does the conversion and makes the payout. AvecPay handles the user experience, quotes, recipient management and status tracking.
+**Avec Pay never custodies funds and never converts crypto.** MoonPay runs KYC, issues the deposit address, does the conversion and makes the payout. Avec Pay handles the user experience, quotes, recipient management and status tracking.
 
 > Before the first real test, read **[docs/MOONPAY_SETUP.md](docs/MOONPAY_SETUP.md)**. It lists the credentials you need and the open questions for MoonPay.
 
 ## Flow
 
 ```
-Sender (US)                    AvecPay                          MoonPay                    Recipient (HN)
+Sender (US)                    Avec Pay                          MoonPay                    Recipient (HN)
     │ enter recipient, amount ─▶ live corridor + quote ◀──────── /v3/countries, /v3/currencies,
     │                            (nothing hard-coded)            /v3/currencies/:code/sell_quote
     │ create transfer ─────────▶ transfer: Created, claim link
@@ -32,7 +32,7 @@ MoonPay creates the sell order and its deposit address only *after* the recipien
 | MoonPay adapter (REST, widget signing, webhooks, status mapping) | `src/lib/providers/moonpay/` |
 | Status lifecycle (forward-only transitions) | `src/lib/status.ts` |
 | Deposit address safety + order reconciliation | `src/lib/reconcile.ts`, `src/lib/transfers.ts` |
-| AvecPay fee policy (separate from provider fees) | `src/lib/fees.ts` |
+| Avec Pay fee policy (separate from provider fees) | `src/lib/fees.ts` |
 | Database schema + RLS | `supabase/migrations/0001_init.sql` |
 | API routes | `src/app/api/*` |
 | Webhook endpoint | `POST /api/webhooks/moonpay` |
@@ -46,9 +46,9 @@ MoonPay creates the sell order and its deposit address only *after* the recipien
 - **Status writes happen only on the server.** They use the service role with optimistic concurrency. Users have read-only RLS access to their own transfers.
 - **Refunds go to the sender.** The sender gives a refund wallet, which is passed to MoonPay as `refundWalletAddress`.
 
-### Status mapping (MoonPay sell → AvecPay)
+### Status mapping (MoonPay sell → Avec Pay)
 
-| MoonPay | AvecPay |
+| MoonPay | Avec Pay |
 |---|---|
 | (no order yet) | Created |
 | `waitingForDeposit` (with a deposit address) | Awaiting USDT |
@@ -56,7 +56,7 @@ MoonPay creates the sell order and its deposit address only *after* the recipien
 | `completed` | Payout initiated → Completed |
 | `failed` | Failed |
 
-MoonPay's documented sell statuses have no separate "payout initiated" state. When MoonPay reports `completed`, meaning it has sent the payout, AvecPay records both steps. Card arrival can take from minutes to about 2 business days after that.
+MoonPay's documented sell statuses have no separate "payout initiated" state. When MoonPay reports `completed`, meaning it has sent the payout, Avec Pay records both steps. Card arrival can take from minutes to about 2 business days after that.
 
 ## Running locally
 

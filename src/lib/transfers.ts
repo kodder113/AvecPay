@@ -11,7 +11,7 @@ const SNAPSHOT_COLUMNS =
   "id, status, provider, crypto_currency_code, crypto_amount, provider_transaction_id, deposit_address, deposit_address_tag";
 
 /**
- * Applies a provider order to its AvecPay transfer and records status history.
+ * Applies a provider order to its Avec Pay transfer and records status history.
  * Safe to call repeatedly (webhooks, polling and redirects may all race).
  */
 export async function applyProviderOrder(

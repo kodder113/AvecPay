@@ -22,7 +22,7 @@ export interface ReconcileResult {
 }
 
 /**
- * Pure reconciliation of a provider order into an AvecPay transfer.
+ * Pure reconciliation of a provider order into an Avec Pay transfer.
  *
  * Safety rules (the sender must only ever be shown a deposit address that
  * belongs to *this* order):

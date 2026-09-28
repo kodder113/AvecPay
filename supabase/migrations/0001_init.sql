@@ -1,7 +1,7 @@
--- AvecPay initial schema.
+-- Avec Pay initial schema.
 --
 -- Design notes
--- * AvecPay never custodies funds. `transfers` records an off-ramp order that
+-- * Avec Pay never custodies funds. `transfers` records an off-ramp order that
 --   lives at a payout provider (MoonPay first). The provider issues the deposit
 --   address; the sender pays it directly from their own wallet.
 -- * Status and deposit fields are written only by the server (service role),

@@ -36,7 +36,7 @@ export function QuoteBreakdown({ q, heading = "Estimate" }: { q: QuoteView; head
         {q.networkFee != null && Number(q.networkFee) > 0 && (
           <Row label="Network fee" value={fmtAmount(q.networkFee, fiat)} />
         )}
-        <Row label="AvecPay fee" value={fmtAmount(q.avecpayFee ?? 0, fiat)} />
+        <Row label="Avec Pay fee" value={fmtAmount(q.avecpayFee ?? 0, fiat)} />
         <Row label="Recipient gets (estimated)" value={fmtAmount(q.recipientAmount, fiat)} strong />
       </dl>
       <p className="mt-2 text-xs text-slate-500">

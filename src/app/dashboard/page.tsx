@@ -31,7 +31,7 @@ export default async function Dashboard() {
             const fiatCurrency = t.final_fiat_currency ?? t.est_fiat_currency;
             return (
               <li key={t.id}>
-                <Link href={`/transfers/${t.id}`} className="card block hover:border-brand-500">
+                <Link href={`/transfers/${t.id}`} className="card block hover:border-brand-ink">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate font-semibold">{r?.full_name ?? "Recipient"}</p>

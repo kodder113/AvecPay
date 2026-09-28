@@ -5,12 +5,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Avec Pay brand, sampled from the logo.
         brand: {
-          50: "#eef6ff",
-          100: "#d9eaff",
-          500: "#2563eb",
-          600: "#1d4ed8",
-          700: "#1e40af",
+          yellow: "#EFE14C",
+          "yellow-dark": "#D6C82F",
+          ink: "#1B1E25",
+          "ink-soft": "#2A2E38",
         },
       },
     },

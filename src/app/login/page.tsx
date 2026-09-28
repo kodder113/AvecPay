@@ -2,6 +2,7 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { LogoFull } from "@/components/Logo";
 
 function LoginForm() {
   const params = useSearchParams();
@@ -35,7 +36,10 @@ function LoginForm() {
 
   return (
     <form onSubmit={submit} className="card space-y-4">
-      <h1 className="text-xl font-semibold">Sign in or create your AvecPay account</h1>
+      <div className="flex justify-center">
+        <LogoFull size={96} />
+      </div>
+      <h1 className="text-xl font-semibold">Sign in or create your <span className="whitespace-nowrap">Avec Pay</span> account</h1>
       <div>
         <label className="label" htmlFor="email">Email</label>
         <input id="email" type="email" required className="input" value={email} onChange={(e) => setEmail(e.target.value)} />

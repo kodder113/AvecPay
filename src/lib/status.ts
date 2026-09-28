@@ -1,5 +1,5 @@
 /**
- * AvecPay's provider-independent transfer lifecycle.
+ * Avec Pay's provider-independent transfer lifecycle.
  * Providers map their own statuses onto these in their adapter.
  */
 export const TRANSFER_STATUSES = [

@@ -1,9 +1,9 @@
 /**
- * AvecPay's own fee, kept separate from provider fees so it can be configured
+ * Avec Pay's own fee, kept separate from provider fees so it can be configured
  * (and later priced per corridor) without touching provider code.
  *
- * AvecPay does not custody funds, so the fee must be collected by the payout
- * provider on AvecPay's behalf. For MoonPay that is the partner fee
+ * Avec Pay does not custody funds, so the fee must be collected by the payout
+ * provider on Avec Pay's behalf. For MoonPay that is the partner fee
  * (`extraFeePercentage`), which MoonPay deducts and settles to the partner.
  */
 export type FeeCollection = "moonpay_partner_fee" | "none";

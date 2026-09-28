@@ -56,12 +56,12 @@ export default async function TransferPage({ params }: { params: Promise<{ id: s
             <CopyButton value={claimUrl} label="Copy link" />
           </div>
           {recipient?.email && (
-            <a className="text-sm text-brand-700 underline" href={`mailto:${recipient.email}?subject=${encodeURIComponent("You have money waiting on AvecPay")}&body=${encodeURIComponent(claimUrl)}`}>
+            <a className="text-sm font-medium text-brand-ink underline" href={`mailto:${recipient.email}?subject=${encodeURIComponent("You have money waiting on Avec Pay")}&body=${encodeURIComponent(claimUrl)}`}>
               Email it to {recipient.email}
             </a>
           )}
           {recipient?.phone && (
-            <a className="block text-sm text-brand-700 underline" href={`https://wa.me/${recipient.phone.replace(/\D/g, "")}?text=${encodeURIComponent(claimUrl)}`}>
+            <a className="block text-sm font-medium text-brand-ink underline" href={`https://wa.me/${recipient.phone.replace(/\D/g, "")}?text=${encodeURIComponent(claimUrl)}`}>
               Send via WhatsApp
             </a>
           )}

@@ -8,7 +8,7 @@ import { getFeePolicy } from "@/lib/fees";
 import { handleRouteError, jsonError } from "@/lib/http";
 
 /**
- * Creates an AvecPay transfer. The quote is re-fetched server-side; the
+ * Creates an Avec Pay transfer. The quote is re-fetched server-side; the
  * client's numbers are never trusted. The provider order (and its deposit
  * address) is created later, when the recipient completes the provider flow.
  */

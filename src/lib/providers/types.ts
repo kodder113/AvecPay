@@ -2,7 +2,7 @@ import type { TransferStatus } from "@/lib/status";
 import type { AvecPayFeePolicy } from "@/lib/fees";
 
 /**
- * Provider abstraction. AvecPay talks to off-ramp providers only through this
+ * Provider abstraction. Avec Pay talks to off-ramp providers only through this
  * interface so that providers other than MoonPay can be added later.
  *
  * Everything returned here must come from the provider itself. Adapters must
@@ -75,11 +75,11 @@ export interface RecipientSessionRequest {
   fee: AvecPayFeePolicy;
 }
 
-/** Provider order state normalized into AvecPay terms. */
+/** Provider order state normalized into Avec Pay terms. */
 export interface ProviderOrder {
   providerTransactionId: string;
   createdAt: string | null;
-  /** AvecPay transfer id echoed back by the provider. */
+  /** Avec Pay transfer id echoed back by the provider. */
   externalTransactionId: string | null;
   status: TransferStatus;
   providerStatus: string;
@@ -115,7 +115,7 @@ export interface PayoutProvider {
    */
   createRecipientSessionUrl(req: RecipientSessionRequest): string;
   getOrder(providerTransactionId: string): Promise<ProviderOrder>;
-  /** All provider orders tagged with this AvecPay transfer id, oldest first. */
+  /** All provider orders tagged with this Avec Pay transfer id, oldest first. */
   listOrdersByTransferId(transferId: string): Promise<ProviderOrder[]>;
   handleWebhook(rawBody: string, headers: Headers): Promise<WebhookResult>;
 }

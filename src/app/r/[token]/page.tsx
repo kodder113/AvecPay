@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ClaimStartButton } from "@/components/ClaimStartButton";
+import { LogoFull } from "@/components/Logo";
 import { StatusBadge } from "@/components/StatusBadge";
 import { fmtAmount } from "@/lib/format";
 import type { TransferStatus } from "@/lib/status";
@@ -23,6 +24,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
   return (
     <div className="space-y-4">
       <section className="card space-y-3">
+        <LogoFull size={64} />
         <p className="text-sm text-slate-500">Hi {recipient?.full_name},</p>
         <h1 className="text-2xl font-bold">You’ve been sent {fmtAmount(t.crypto_amount, "USDT", 6)}</h1>
         <p className="text-slate-600">
