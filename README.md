@@ -70,6 +70,21 @@ npm run dev
 
 Checks: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
 
+## Paying from a connected wallet
+
+On the transfer page, once MoonPay has issued the deposit address, the sender can pay with one tap instead of copy-paste. The USDT still goes straight from the sender's wallet to MoonPay.
+
+- **Ethereum, Polygon, Arbitrum, Optimism, BNB Smart Chain, Avalanche:** WalletConnect (Reown AppKit). Set `NEXT_PUBLIC_REOWN_PROJECT_ID`, a free, public ID from cloud.reown.com.
+- **Tron:** TronLink (the browser extension, or the TronLink app's built-in browser). No ID is needed.
+- **Safety rules:**
+  - It only sends the official USDT contract for the transfer's network (`src/lib/chains.ts`), fixed when the transfer is created.
+  - It sends the exact amount, with no rounding, and checks the balance first.
+  - It only sends to MoonPay's deposit address.
+  - It is off in sandbox and for unverified tokens, and when a memo is required.
+  - It records the sender's transaction, so the page never offers to pay twice.
+- The sender's refund address can be filled from the connected wallet ("Use my wallet").
+- Run `supabase/migrations/0002_wallet_pay.sql` after `0001`.
+
 ## Adding a payout provider
 
 1. Implement `PayoutProvider` (`src/lib/providers/types.ts`). It covers corridor capabilities, quotes, the hosted recipient session, order lookup, and webhook handling.

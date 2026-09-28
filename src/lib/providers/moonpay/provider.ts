@@ -60,7 +60,7 @@ interface MpCurrency {
   minSellAmount?: number | null;
   maxSellAmount?: number | null;
   notAllowedCountries?: string[];
-  metadata?: { networkCode?: string | null } | null;
+  metadata?: { networkCode?: string | null; contractAddress?: string | null } | null;
 }
 
 interface MpCountry {
@@ -181,6 +181,7 @@ export class MoonPayProvider implements PayoutProvider {
         symbol: "USDT",
         name: c.name,
         network: c.metadata?.networkCode ?? null,
+        contractAddress: c.metadata?.contractAddress ?? null,
         minSellAmount: num(c.minSellAmount),
         maxSellAmount: num(c.maxSellAmount),
       }));

@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { providerForCorridor } from "@/lib/providers/registry";
 import { appUrl, checkAgainstCorridor, transferInput, validateRefundAddress } from "@/lib/validation";
 import { getFeePolicy } from "@/lib/fees";
+import { resolveWalletPayContract } from "@/lib/chains";
 import { handleRouteError, jsonError } from "@/lib/http";
 
 /**
@@ -74,6 +75,11 @@ export async function POST(req: Request) {
         recipient_country: input.countryCode,
         payout_method: corridor.payoutMethod,
         refund_wallet_address: input.refundWalletAddress,
+        wallet_pay_contract: resolveWalletPayContract(
+          asset.network,
+          asset.contractAddress,
+          process.env.MOONPAY_ENV === "production",
+        ),
         est_fiat_currency: quote.fiatCurrency,
         est_fiat_amount: quote.recipientAmount,
         est_exchange_rate: quote.exchangeRate,

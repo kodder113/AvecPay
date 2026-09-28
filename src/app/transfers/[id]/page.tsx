@@ -5,6 +5,7 @@ import { StatusTimeline, type TimelineEvent } from "@/components/StatusTimeline"
 import { QuoteBreakdown } from "@/components/QuoteBreakdown";
 import { CopyButton } from "@/components/CopyButton";
 import { AutoRefresh } from "@/components/AutoRefresh";
+import { WalletPayCard } from "@/components/wallet";
 import { fmtAmount, networkLabel } from "@/lib/format";
 import { isTerminal, type TransferStatus } from "@/lib/status";
 import { appUrl } from "@/lib/validation";
@@ -70,7 +71,9 @@ export default async function TransferPage({ params }: { params: Promise<{ id: s
 
       {showDeposit && (
         <section className="card space-y-3 border-amber-300 bg-amber-50">
-          <h2 className="font-semibold">Step 2 — Send exactly {fmtAmount(t.crypto_amount, "USDT", 6)}</h2>
+          <h2 className="font-semibold">
+            {t.sender_tx_hash ? "Step 2 — Payment sent" : `Step 2 — Send exactly ${fmtAmount(t.crypto_amount, "USDT", 6)}`}
+          </h2>
           <ul className="list-disc space-y-1 pl-5 text-sm text-amber-900">
             <li>
               Network: <strong>{network || t.crypto_currency_code}</strong>. Sending on any other network loses the funds.
@@ -94,6 +97,15 @@ export default async function TransferPage({ params }: { params: Promise<{ id: s
               </div>
             </div>
           )}
+          <WalletPayCard
+            transferId={t.id}
+            network={t.crypto_network}
+            contract={t.wallet_pay_contract}
+            depositAddress={t.deposit_address}
+            depositAddressTag={t.deposit_address_tag}
+            amount={String(t.crypto_amount)}
+            senderTxHash={t.sender_tx_hash}
+          />
         </section>
       )}
 

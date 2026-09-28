@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import type { CorridorCapabilities, Quote } from "@/lib/providers/types";
 import { QuoteBreakdown } from "@/components/QuoteBreakdown";
 import { networkLabel } from "@/lib/format";
+import { UseMyWalletButton } from "@/components/wallet";
 
 interface Recipient {
   id: string;
@@ -227,14 +228,17 @@ export function SendForm() {
               </div>
               <div>
                 <label className="label" htmlFor="refund">Your refund wallet address</label>
-                <input
-                  id="refund"
-                  className="input font-mono text-sm"
-                  value={refundAddress}
-                  onChange={(e) => setRefundAddress(e.target.value)}
-                  placeholder={asset?.network ? `Your ${networkLabel(asset.network)} address` : "Wallet address"}
-                  autoComplete="off"
-                />
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+                  <input
+                    id="refund"
+                    className="input font-mono text-sm"
+                    value={refundAddress}
+                    onChange={(e) => setRefundAddress(e.target.value)}
+                    placeholder={asset?.network ? `Your ${networkLabel(asset.network)} address` : "Wallet address"}
+                    autoComplete="off"
+                  />
+                  {asset && <UseMyWalletButton network={asset.network} onAddress={setRefundAddress} />}
+                </div>
                 <p className="mt-1 text-xs text-slate-500">
                   If MoonPay can’t complete the payout, it returns the USDT here. Use a wallet you control.
                 </p>

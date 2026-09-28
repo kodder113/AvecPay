@@ -15,6 +15,8 @@ export interface CryptoAsset {
   symbol: string; // 'USDT'
   name: string;
   network: string | null; // 'tron', 'ethereum', ...
+  /** Token contract the provider reports for this asset, if any. */
+  contractAddress: string | null;
   minSellAmount: number | null;
   maxSellAmount: number | null;
 }
