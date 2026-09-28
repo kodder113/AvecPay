@@ -2,7 +2,8 @@ export function fmtAmount(value: number | string | null | undefined, currency?: 
   if (value == null || value === "") return "—";
   const n = Number(value);
   if (!Number.isFinite(n)) return "—";
-  const num = n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: maxDp });
+  // Fiat (2dp) always shows cents; crypto and rates trim trailing zeros.
+  const num = n.toLocaleString("en-US", { minimumFractionDigits: maxDp === 2 ? 2 : 0, maximumFractionDigits: maxDp });
   return currency ? `${num} ${currency.toUpperCase()}` : num;
 }
 
