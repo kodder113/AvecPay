@@ -41,7 +41,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             )}
           </nav>
           {user && (
-            <div className="mx-auto flex max-w-3xl items-center gap-6 px-4 pb-3 text-sm font-medium">
+            <div className="mx-auto flex max-w-3xl items-center gap-5 overflow-x-auto whitespace-nowrap px-4 pb-3 text-sm font-medium">
+              <Link href="/cobrar" className="font-semibold text-brand-yellow">
+                Cobrar
+              </Link>
+              <Link href="/escanear" className="text-slate-200 hover:text-brand-yellow">
+                Pagar QR
+              </Link>
+              <Link href="/banco-demo" className="text-slate-200 hover:text-brand-yellow">
+                Banco Demo
+              </Link>
+              <span className="h-4 w-px bg-white/20" />
               <Link href="/dashboard" className="text-slate-200 hover:text-brand-yellow">
                 Transfers
               </Link>
@@ -51,7 +61,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Link href="/recipients" className="text-slate-200 hover:text-brand-yellow">
                 Recipients
               </Link>
-              <form action="/auth/signout" method="post" className="ml-auto">
+              <form action="/auth/signout" method="post" className="ml-auto pl-2">
                 <button className="text-slate-400 hover:text-white">Sign out</button>
               </form>
             </div>
