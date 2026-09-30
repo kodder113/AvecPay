@@ -5,6 +5,7 @@ import { ModePill } from "@/components/cobros/DemoPill";
 import { LivePayFlow } from "@/components/cobros/LivePayFlow";
 import { formatMoney } from "@/lib/cobros/parse";
 import { isMethod } from "@/lib/cobros/methods";
+import { getT } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export default async function PagarPage({
   params: Promise<{ code: string }>;
   searchParams: Promise<{ pagado?: string }>;
 }) {
+  const { t } = await getT();
   const { code: raw } = await params;
   const returnedFromCard = (await searchParams).pagado === "1";
   const code = raw.toUpperCase();
@@ -30,11 +32,11 @@ export default async function PagarPage({
     : { data: null };
 
   if (!charge) {
-    return <p className="card text-slate-700">Este cobro no existe. Revisa el QR o pide uno nuevo.</p>;
+    return <p className="card text-slate-700">{t({ es: "Este cobro no existe. Revisa el QR o pide uno nuevo.", en: "This charge doesn't exist. Check the QR or ask for a new one." })}</p>;
   }
 
   const merchant = (Array.isArray(charge.merchants) ? charge.merchants[0] : charge.merchants) as { business_name: string } | null;
-  const businessName = merchant?.business_name ?? "Comercio";
+  const businessName = merchant?.business_name ?? t({ es: "Comercio", en: "Merchant" });
   const expired = new Date(charge.expires_at) < new Date();
 
   const live = charge.mode === "live";
@@ -64,28 +66,28 @@ export default async function PagarPage({
     <div className="space-y-4">
       <div className="card space-y-1 text-center">
         <ModePill mode={charge.mode} />
-        <p className="pt-2 text-sm text-slate-500">Pagar a</p>
+        <p className="pt-2 text-sm text-slate-500">{t({ es: "Pagar a", en: "Pay" })}</p>
         <h1 className="text-2xl font-bold">{businessName}</h1>
         <p className="text-4xl font-black">{formatMoney(charge.amount, charge.currency)}</p>
         {charge.description && <p className="text-sm text-slate-600">{charge.description}</p>}
       </div>
 
       {charge.status === "reported" ? (
-        <p className="card text-center text-slate-700">Pago reportado. Esperando que el comercio lo confirme.</p>
+        <p className="card text-center text-slate-700">{t({ es: "Pago reportado. Esperando que el comercio lo confirme.", en: "Payment reported. Waiting for the merchant to confirm it." })}</p>
       ) : charge.status === "paid" ? (
         returnedFromCard ? (
           <div className="card space-y-2 border-emerald-300 bg-emerald-50 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-4xl text-white">✓</div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-800">Pago confirmado</p>
-            <p className="text-slate-700">{businessName} recibió tu pago. ¡Gracias!</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-800">{t({ es: "Pago confirmado", en: "Payment confirmed" })}</p>
+            <p className="text-slate-700">{t({ es: `${businessName} recibió tu pago. ¡Gracias!`, en: `${businessName} got your payment. Thank you!` })}</p>
           </div>
         ) : (
-          <p className="card text-center font-semibold text-emerald-700">Este cobro ya fue pagado. ✓</p>
+          <p className="card text-center font-semibold text-emerald-700">{t({ es: "Este cobro ya fue pagado. ✓", en: "This charge is already paid. ✓" })}</p>
         )
       ) : charge.status === "cancelled" ? (
-        <p className="card text-center text-slate-700">El comercio canceló este cobro.</p>
+        <p className="card text-center text-slate-700">{t({ es: "El comercio canceló este cobro.", en: "The merchant canceled this charge." })}</p>
       ) : expired ? (
-        <p className="card text-center text-slate-700">Este cobro venció. Pide un nuevo QR.</p>
+        <p className="card text-center text-slate-700">{t({ es: "Este cobro venció. Pide un nuevo QR.", en: "This charge has expired. Ask for a new QR." })}</p>
       ) : live ? (
         <LivePayFlow
           code={charge.code}

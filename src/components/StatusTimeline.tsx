@@ -1,5 +1,6 @@
 import { HAPPY_PATH, STATUS_LABELS, type TransferStatus } from "@/lib/status";
-import { fmtDate } from "@/lib/format";
+import { getT } from "@/lib/i18n/server";
+import { localeFor } from "@/lib/i18n";
 
 export interface TimelineEvent {
   status: TransferStatus;
@@ -7,7 +8,10 @@ export interface TimelineEvent {
   source: string;
 }
 
-export function StatusTimeline({ status, events }: { status: TransferStatus; events: TimelineEvent[] }) {
+export async function StatusTimeline({ status, events }: { status: TransferStatus; events: TimelineEvent[] }) {
+  const { lang, t } = await getT();
+  const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleString(localeFor(lang), { dateStyle: "medium", timeStyle: "short" });
   const reachedAt = new Map<TransferStatus, string>();
   for (const e of events) if (!reachedAt.has(e.status)) reachedAt.set(e.status, e.created_at);
   const failed = status === "failed";
@@ -27,7 +31,7 @@ export function StatusTimeline({ status, events }: { status: TransferStatus; eve
               }`}
             />
             <div className="min-w-0">
-              <p className={`text-sm font-medium ${done ? "text-slate-900" : "text-slate-400"}`}>{STATUS_LABELS[s]}</p>
+              <p className={`text-sm font-medium ${done ? "text-slate-900" : "text-slate-400"}`}>{t(STATUS_LABELS[s])}</p>
               {at && <p className="text-xs text-slate-500">{fmtDate(at)}</p>}
             </div>
           </li>

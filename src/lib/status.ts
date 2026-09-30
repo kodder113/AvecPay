@@ -1,3 +1,5 @@
+import type { Tr } from "@/lib/i18n";
+
 /**
  * Avec Pay's provider-independent transfer lifecycle.
  * Providers map their own statuses onto these in their adapter.
@@ -14,14 +16,14 @@ export const TRANSFER_STATUSES = [
 
 export type TransferStatus = (typeof TRANSFER_STATUSES)[number];
 
-export const STATUS_LABELS: Record<TransferStatus, string> = {
-  created: "Created",
-  awaiting_usdt: "Awaiting USDT",
-  usdt_received: "USDT received",
-  processing: "Processing",
-  payout_initiated: "Payout initiated",
-  completed: "Completed",
-  failed: "Failed",
+export const STATUS_LABELS: Record<TransferStatus, Tr> = {
+  created: { es: "Creado", en: "Created" },
+  awaiting_usdt: { es: "Esperando USDT", en: "Awaiting USDT" },
+  usdt_received: { es: "USDT recibido", en: "USDT received" },
+  processing: { es: "Procesando", en: "Processing" },
+  payout_initiated: { es: "Pago iniciado", en: "Payout initiated" },
+  completed: { es: "Completado", en: "Completed" },
+  failed: { es: "Fallido", en: "Failed" },
 };
 
 /** The happy-path order; `failed` is terminal and can happen at any point. */

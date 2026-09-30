@@ -1,3 +1,5 @@
+import type { Lang, Tr } from "@/lib/i18n";
+
 /**
  * Payment methods a merchant can accept. Each is switched on/off at two
  * levels: the partner (Avec direct, or a bank's white-label, e.g. fiat-only)
@@ -13,44 +15,54 @@ export interface MethodInfo {
   description: string;
 }
 
-export const METHOD_INFO: Record<Method, MethodInfo> = {
+const METHOD_TEXT: Record<Method, { kind: MethodInfo["kind"]; label: Tr; short: Tr; description: Tr }> = {
   bank_transfer: {
-    label: "Transferencia bancaria",
-    short: "Transferencia",
     kind: "fiat",
-    description: "ACH Pronto, directo a la cuenta del comercio.",
+    label: { es: "Transferencia bancaria", en: "Bank transfer" },
+    short: { es: "Transferencia", en: "Transfer" },
+    description: { es: "ACH Pronto, directo a la cuenta del comercio.", en: "ACH Pronto, straight to the business's account." },
   },
   tigo_money: {
-    label: "Tigo Money",
-    short: "Tigo Money",
     kind: "fiat",
-    description: "Desde la billetera Tigo Money del cliente.",
+    label: { es: "Tigo Money", en: "Tigo Money" },
+    short: { es: "Tigo Money", en: "Tigo Money" },
+    description: { es: "Desde la billetera Tigo Money del cliente.", en: "From the customer's Tigo Money wallet." },
   },
   card: {
-    label: "Tarjeta o Apple Pay",
-    short: "Tarjeta",
     kind: "fiat",
-    description: "Débito, crédito o Apple Pay.",
+    label: { es: "Tarjeta o Apple Pay", en: "Card or Apple Pay" },
+    short: { es: "Tarjeta", en: "Card" },
+    description: { es: "Débito, crédito o Apple Pay.", en: "Debit, credit or Apple Pay." },
   },
   lightning: {
-    label: "Bitcoin Lightning",
-    short: "Bitcoin ⚡",
     kind: "crypto",
-    description: "Pago instantáneo en bitcoin.",
+    label: { es: "Bitcoin Lightning", en: "Bitcoin Lightning" },
+    short: { es: "Bitcoin ⚡", en: "Bitcoin ⚡" },
+    description: { es: "Pago instantáneo en bitcoin.", en: "Instant bitcoin payment." },
   },
   usdt: {
-    label: "USDT",
-    short: "USDT",
     kind: "crypto",
-    description: "Dólar digital (stablecoin).",
+    label: { es: "USDT", en: "USDT" },
+    short: { es: "USDT", en: "USDT" },
+    description: { es: "Dólar digital (stablecoin).", en: "Digital dollar (stablecoin)." },
   },
   zelle: {
-    label: "Zelle",
-    short: "Zelle",
     kind: "fiat",
-    description: "Desde la app de tu banco en EE. UU.",
+    label: { es: "Zelle", en: "Zelle" },
+    short: { es: "Zelle", en: "Zelle" },
+    description: { es: "Desde la app de tu banco en EE. UU.", en: "From your US bank's app." },
   },
 };
+
+/** Names and descriptions of every method, in one language. */
+export function methodInfo(lang: Lang): Record<Method, MethodInfo> {
+  return Object.fromEntries(
+    METHODS.map((m) => {
+      const x = METHOD_TEXT[m];
+      return [m, { kind: x.kind, label: x.label[lang], short: x.short[lang], description: x.description[lang] }];
+    }),
+  ) as Record<Method, MethodInfo>;
+}
 
 /**
  * Methods that can take real money today; the rest are demo-only for now.

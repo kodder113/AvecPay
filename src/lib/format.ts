@@ -16,9 +16,9 @@ export function networkLabel(network: string | null | undefined): string {
   return network.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function countryName(code: string): string {
+export function countryName(code: string, lang: "es" | "en" = "en"): string {
   try {
-    return new Intl.DisplayNames(["en"], { type: "region" }).of(code) ?? code;
+    return new Intl.DisplayNames([lang], { type: "region" }).of(code) ?? code;
   } catch {
     return code;
   }

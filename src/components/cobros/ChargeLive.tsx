@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import QRCode from "qrcode";
 import { formatDateTime, formatMoney } from "@/lib/cobros/parse";
-import { METHOD_INFO, isMethod } from "@/lib/cobros/methods";
+import { methodInfo, isMethod } from "@/lib/cobros/methods";
 import { addMoney } from "@/lib/cobros/tip";
+import { useLang, useT } from "@/components/i18n/LangProvider";
 
 export interface ChargeView {
   id: string;
@@ -29,6 +30,8 @@ export interface ChargeView {
  * confirmed the transfer into the merchant's account.
  */
 export function ChargeLive({ initial, businessName }: { initial: ChargeView; businessName: string }) {
+  const t = useT();
+  const lang = useLang();
   const [charge, setCharge] = useState(initial);
   const [qr, setQr] = useState<string | null>(null);
   const [link, setLink] = useState("");
@@ -89,40 +92,43 @@ export function ChargeLive({ initial, businessName }: { initial: ChargeView; bus
       <div className="space-y-4">
         <div className="card space-y-3 border-emerald-300 bg-emerald-50 text-center">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500 text-5xl text-white">✓</div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-emerald-800">Pago confirmado</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-emerald-800">{t({ es: "Pago confirmado", en: "Payment confirmed" })}</p>
           <p className="text-4xl font-black">{formatMoney(addMoney(charge.amount, charge.tip_amount ?? 0), charge.currency)}</p>
           {Number(charge.tip_amount) > 0 && (
             <p className="text-sm text-slate-700">
-              {formatMoney(charge.amount, charge.currency)} + propina <b>{formatMoney(charge.tip_amount!, charge.currency)}</b> 🎉
+              {formatMoney(charge.amount, charge.currency)} + {t({ es: "propina", en: "tip" })} <b>{formatMoney(charge.tip_amount!, charge.currency)}</b> 🎉
             </p>
           )}
           <p className="text-slate-700">
-            de <b>{charge.payer_name ?? "Cliente"}</b>
-            {isMethod(charge.paid_method) && <> · {METHOD_INFO[charge.paid_method].label}</>}
+            {t({ es: "de", en: "from" })} <b>{charge.payer_name ?? t({ es: "Cliente", en: "Customer" })}</b>
+            {isMethod(charge.paid_method) && <> · {methodInfo(lang)[charge.paid_method].label}</>}
           </p>
           <p className="text-sm text-slate-600">
             {charge.paid_reference && (
               <>
-                Referencia <span className="font-mono font-semibold">{charge.paid_reference}</span>
+                {t({ es: "Referencia", en: "Reference" })} <span className="font-mono font-semibold">{charge.paid_reference}</span>
                 {charge.paid_at && " · "}
               </>
             )}
-            {charge.paid_at && formatDateTime(charge.paid_at)}
+            {charge.paid_at && formatDateTime(charge.paid_at, lang)}
           </p>
           <p className="text-xs text-slate-500">
             {!live
-              ? "El dinero está en tu cuenta de Banco Demo, no en Avec."
+              ? t({ es: "El dinero está en tu cuenta de Banco Demo, no en Avec.", en: "The money is in your Demo Bank account, not in Avec." })
               : charge.paid_method === "card"
-                ? "Cobrado por Stripe. Llega a tu banco con el próximo depósito de Stripe. Avec no toca el dinero."
-                : "Confirmado por ti al verlo en tu banco. Avec no toca el dinero."}
+                ? t({
+                    es: "Cobrado por Stripe. Llega a tu banco con el próximo depósito de Stripe. Avec no toca el dinero.",
+                    en: "Charged through Stripe. It reaches your bank with Stripe’s next payout. Avec never touches the money.",
+                  })
+                : t({ es: "Confirmado por ti al verlo en tu banco. Avec no toca el dinero.", en: "Confirmed by you after seeing it in your bank. Avec never touches the money." })}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Link href="/cobrar" className="btn-primary">Nuevo cobro</Link>
+          <Link href="/cobrar" className="btn-primary">{t({ es: "Nuevo cobro", en: "New charge" })}</Link>
           {live ? (
-            <Link href="/cobrar/historial" className="btn-secondary">Historial</Link>
+            <Link href="/cobrar/historial" className="btn-secondary">{t({ es: "Historial", en: "History" })}</Link>
           ) : (
-            <Link href="/banco-demo" className="btn-secondary">Ver Banco Demo</Link>
+            <Link href="/banco-demo" className="btn-secondary">{t({ es: "Ver Banco Demo", en: "View Demo Bank" })}</Link>
           )}
         </div>
       </div>
@@ -133,21 +139,21 @@ export function ChargeLive({ initial, businessName }: { initial: ChargeView; bus
     return (
       <div className="space-y-4">
         <div className="card space-y-3 border-amber-300 bg-amber-50 text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-amber-800">El cliente dice que ya pagó</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-amber-800">{t({ es: "El cliente dice que ya pagó", en: "Customer says they paid" })}</p>
           <p className="text-4xl font-black">{formatMoney(addMoney(charge.amount, charge.tip_amount ?? 0), charge.currency)}</p>
           {Number(charge.tip_amount) > 0 && (
             <p className="text-sm text-slate-700">
-              {formatMoney(charge.amount, charge.currency)} + propina {formatMoney(charge.tip_amount!, charge.currency)}
+              {formatMoney(charge.amount, charge.currency)} + {t({ es: "propina", en: "tip" })} {formatMoney(charge.tip_amount!, charge.currency)}
             </p>
           )}
           <p className="text-slate-700">
-            por Zelle · de <b>{charge.payer_name ?? "Cliente"}</b> · nota <span className="font-mono">{charge.code}</span>
+            {t({ es: "por Zelle · de", en: "via Zelle · from" })} <b>{charge.payer_name ?? t({ es: "Cliente", en: "Customer" })}</b> · {t({ es: "nota", en: "memo" })} <span className="font-mono">{charge.code}</span>
           </p>
-          <p className="text-sm text-slate-600">Abre la app de tu banco y confirma que llegó antes de entregar.</p>
+          <p className="text-sm text-slate-600">{t({ es: "Abre la app de tu banco y confirma que llegó antes de entregar.", en: "Open your bank app and confirm it arrived before handing anything over." })}</p>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <button type="button" className="btn-primary" disabled={confirming} onClick={() => confirm(true)}>✓ Recibido</button>
-          <button type="button" className="btn-secondary" disabled={confirming} onClick={() => confirm(false)}>No llegó</button>
+          <button type="button" className="btn-primary" disabled={confirming} onClick={() => confirm(true)}>✓ {t({ es: "Recibido", en: "Received" })}</button>
+          <button type="button" className="btn-secondary" disabled={confirming} onClick={() => confirm(false)}>{t({ es: "No llegó", en: "Didn’t arrive" })}</button>
         </div>
       </div>
     );
@@ -162,24 +168,24 @@ export function ChargeLive({ initial, businessName }: { initial: ChargeView; bus
         <div className={`mx-auto w-full max-w-xs ${waiting ? "" : "opacity-30"}`}>
           {qr ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={qr} alt={`QR para pagar ${formatMoney(charge.amount, charge.currency)}`} className="w-full rounded-xl" />
+            <img src={qr} alt={t({ es: `QR para pagar ${formatMoney(charge.amount, charge.currency)}`, en: `QR to pay ${formatMoney(charge.amount, charge.currency)}` })} className="w-full rounded-xl" />
           ) : (
             <div className="aspect-square w-full animate-pulse rounded-xl bg-slate-100" />
           )}
         </div>
         {waiting && (
           <p className="flex items-center justify-center gap-2 text-sm text-slate-600">
-            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-amber-500" /> Esperando el pago…
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-amber-500" /> {t({ es: "Esperando el pago…", en: "Waiting for payment…" })}
           </p>
         )}
-        {expired && <p className="font-semibold text-slate-700">Este cobro venció.</p>}
-        {charge.status === "cancelled" && <p className="font-semibold text-slate-700">Cobro cancelado.</p>}
+        {expired && <p className="font-semibold text-slate-700">{t({ es: "Este cobro venció.", en: "This charge expired." })}</p>}
+        {charge.status === "cancelled" && <p className="font-semibold text-slate-700">{t({ es: "Cobro cancelado.", en: "Charge cancelled." })}</p>}
         <p className="font-mono text-xs tracking-widest text-slate-400">{charge.code}</p>
       </div>
 
       {waiting ? (
         <div className="grid grid-cols-2 gap-3">
-          <a className="btn-primary" href={`https://wa.me/?text=${encodeURIComponent(`Paga ${formatMoney(charge.amount, charge.currency)} a ${businessName}: ${link}`)}`}>
+          <a className="btn-primary" href={`https://wa.me/?text=${encodeURIComponent(t({ es: `Paga ${formatMoney(charge.amount, charge.currency)} a ${businessName}: ${link}`, en: `Pay ${formatMoney(charge.amount, charge.currency)} to ${businessName}: ${link}` }))}`}>
             WhatsApp
           </a>
           <button
@@ -191,19 +197,19 @@ export function ChargeLive({ initial, businessName }: { initial: ChargeView; bus
               setTimeout(() => setCopied(false), 1500);
             }}
           >
-            {copied ? "Copiado" : "Copiar enlace"}
+            {copied ? t({ es: "Copiado", en: "Copied" }) : t({ es: "Copiar enlace", en: "Copy link" })}
           </button>
           {live && (
             <button type="button" className="col-span-2 text-sm text-brand-ink underline" onClick={() => confirm(true)} disabled={confirming}>
-              Ya lo vi en mi banco: marcar como recibido
+              {t({ es: "Ya lo vi en mi banco: marcar como recibido", en: "I see it in my bank: mark as received" })}
             </button>
           )}
           <button type="button" className="col-span-2 text-sm text-slate-500 underline" onClick={cancel} disabled={cancelling}>
-            Cancelar cobro
+            {t({ es: "Cancelar cobro", en: "Cancel charge" })}
           </button>
         </div>
       ) : (
-        <Link href="/cobrar" className="btn-primary w-full">Nuevo cobro</Link>
+        <Link href="/cobrar" className="btn-primary w-full">{t({ es: "Nuevo cobro", en: "New charge" })}</Link>
       )}
     </div>
   );

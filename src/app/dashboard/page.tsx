@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/StatusBadge";
-import { fmtAmount, fmtDate } from "@/lib/format";
+import { fmtAmount } from "@/lib/format";
+import { getT } from "@/lib/i18n/server";
+import { localeFor } from "@/lib/i18n";
 import type { TransferStatus } from "@/lib/status";
 
 export default async function Dashboard() {
   const supabase = await createClient();
+  const { lang, t: tr } = await getT();
+  const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleString(localeFor(lang), { dateStyle: "medium", timeStyle: "short" });
   const { data: transfers, error } = await supabase
     .from("transfers")
     .select("id, status, crypto_amount, crypto_currency_code, est_fiat_amount, est_fiat_currency, final_fiat_amount, final_fiat_currency, created_at, recipients(full_name, country_code)")
@@ -15,14 +20,14 @@ export default async function Dashboard() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Transfers</h1>
+        <h1 className="text-2xl font-bold">{tr({ es: "Envíos", en: "Transfers" })}</h1>
         <Link href="/send" className="btn-primary">
-          Send money
+          {tr({ es: "Enviar dinero", en: "Send money" })}
         </Link>
       </div>
       {error && <p className="card text-sm text-red-600">{error.message}</p>}
       {!transfers?.length ? (
-        <p className="card text-slate-600">No transfers yet.</p>
+        <p className="card text-slate-600">{tr({ es: "Aún no tienes envíos.", en: "No transfers yet." })}</p>
       ) : (
         <ul className="space-y-3">
           {transfers.map((t) => {
@@ -34,7 +39,7 @@ export default async function Dashboard() {
                 <Link href={`/transfers/${t.id}`} className="card block hover:border-brand-ink">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate font-semibold">{r?.full_name ?? "Recipient"}</p>
+                      <p className="truncate font-semibold">{r?.full_name ?? tr({ es: "Destinatario", en: "Recipient" })}</p>
                       <p className="text-xs text-slate-500">
                         {r?.country_code} · {fmtDate(t.created_at)}
                       </p>

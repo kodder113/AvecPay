@@ -4,6 +4,7 @@ import { getProvider } from "@/lib/providers/registry";
 import { getFeePolicy } from "@/lib/fees";
 import { appUrl } from "@/lib/validation";
 import { handleRouteError, jsonError } from "@/lib/http";
+import { getT } from "@/lib/i18n/server";
 
 /**
  * Recipient (unauthenticated, holds the claim token) starts the provider's
@@ -12,6 +13,11 @@ import { handleRouteError, jsonError } from "@/lib/http";
  */
 export async function POST(_req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
+  const { t: tr } = await getT();
+  const alreadySetUp = tr({
+    es: "Este envío ya se configuró con el proveedor de pago.",
+    en: "This transfer has already been set up with the payout provider.",
+  });
   const db = createAdminClient();
   const { data: t } = await db
     .from("transfers")
@@ -20,16 +26,16 @@ export async function POST(_req: Request, { params }: { params: Promise<{ token:
     )
     .eq("claim_token", token)
     .single();
-  if (!t) return jsonError(404, "Link not found");
+  if (!t) return jsonError(404, tr({ es: "Enlace no encontrado", en: "Link not found" }));
   if (t.status !== "created" || t.provider_transaction_id) {
-    return jsonError(409, "This transfer has already been set up with the payout provider.");
+    return jsonError(409, alreadySetUp);
   }
 
   try {
     const provider = getProvider(t.provider);
     // If an order already exists (e.g. the redirect was lost), never open a second one.
     const existing = await provider.listOrdersByTransferId(t.id);
-    if (existing.length) return jsonError(409, "This transfer has already been set up with the payout provider.");
+    if (existing.length) return jsonError(409, alreadySetUp);
 
     const recipient = Array.isArray(t.recipients) ? t.recipients[0] : t.recipients;
     const url = provider.createRecipientSessionUrl({

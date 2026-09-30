@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getT } from "@/lib/i18n/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/supabase/server";
 import { METHODS } from "@/lib/cobros/methods";
@@ -20,12 +21,13 @@ const zelleHandleOk = (h: string) =>
 
 /** Create or update the signed-in user's merchant profile and method switches. */
 export async function POST(req: Request) {
+  const { t } = await getT();
   const { supabase, user } = await requireUser();
-  if (!user) return jsonError(401, "Inicia sesión");
+  if (!user) return jsonError(401, t({ es: "Inicia sesión", en: "Sign in" }));
   try {
     const input = body.parse(await req.json());
     if (input.methods.includes("zelle") && !zelleHandleOk(input.zelleHandle)) {
-      return jsonError(400, "Escribe el teléfono (EE. UU.) o correo de tu Zelle");
+      return jsonError(400, t({ es: "Escribe el teléfono (EE. UU.) o correo de tu Zelle", en: "Enter your Zelle phone (US) or email" }));
     }
     const profile = {
       business_name: input.businessName,
@@ -45,7 +47,7 @@ export async function POST(req: Request) {
         .insert({ user_id: user.id, ...profile })
         .select("id")
         .single();
-      if (error || !data) throw error ?? new Error("No se pudo crear el comercio");
+      if (error || !data) throw error ?? new Error(t({ es: "No se pudo crear el comercio", en: "Couldn’t create the business" }));
       merchantId = data.id;
     }
 

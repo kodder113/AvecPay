@@ -5,6 +5,7 @@ import type { CorridorCapabilities, Quote } from "@/lib/providers/types";
 import { QuoteBreakdown } from "@/components/QuoteBreakdown";
 import { networkLabel } from "@/lib/format";
 import { UseMyWalletButton } from "@/components/wallet";
+import { useT } from "@/components/i18n/LangProvider";
 
 interface Recipient {
   id: string;
@@ -21,6 +22,7 @@ interface Country {
 
 export function SendForm() {
   const router = useRouter();
+  const t = useT();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -47,10 +49,10 @@ export function SendForm() {
       .then(async ([r, c]) => {
         if (r.ok) setRecipients(await r.json());
         if (c.ok) setCountries(await c.json());
-        else setLoadError((await c.json().catch(() => ({}))).error ?? "Could not load supported countries");
+        else setLoadError((await c.json().catch(() => ({}))).error ?? t({ es: "No se pudieron cargar los países disponibles", en: "Could not load supported countries" }));
       })
-      .catch(() => setLoadError("Could not load data"));
-  }, []);
+      .catch(() => setLoadError(t({ es: "No se pudieron cargar los datos", en: "Could not load data" })));
+  }, [t]);
 
   const selectedRecipient = recipients.find((r) => r.id === recipientId);
   const effectiveCountry = selectedRecipient?.country_code ?? country;
@@ -66,13 +68,13 @@ export function SendForm() {
     fetch(`/api/corridor?country=${effectiveCountry}`)
       .then(async (res) => {
         const body = await res.json();
-        if (!res.ok) throw new Error(body.error ?? "Failed to load corridor");
+        if (!res.ok) throw new Error(body.error ?? t({ es: "No se pudo cargar la información del país", en: "Failed to load corridor" }));
         setCorridor(body);
         if (body.assets.length === 1) setAssetCode(body.assets[0].code);
       })
       .catch((e) => setProblems([e.message]))
       .finally(() => setCorridorLoading(false));
-  }, [effectiveCountry]);
+  }, [effectiveCountry, t]);
 
   // Any input change invalidates the quote.
   useEffect(() => {
@@ -132,12 +134,12 @@ export function SendForm() {
       {loadError && <p className="card text-sm text-red-600">{loadError}</p>}
 
       <section className="card space-y-4">
-        <h2 className="font-semibold">Recipient</h2>
+        <h2 className="font-semibold">{t({ es: "Destinatario", en: "Recipient" })}</h2>
         {recipients.length > 0 && (
           <div>
-            <label className="label" htmlFor="recipient">Send to</label>
+            <label className="label" htmlFor="recipient">{t({ es: "Enviar a", en: "Send to" })}</label>
             <select id="recipient" className="input" value={recipientId} onChange={(e) => setRecipientId(e.target.value)}>
-              <option value="new">New recipient…</option>
+              <option value="new">{t({ es: "Nuevo destinatario…", en: "New recipient…" })}</option>
               {recipients.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.full_name} ({r.country_code})
@@ -149,30 +151,35 @@ export function SendForm() {
         {!selectedRecipient && (
           <>
             <div>
-              <label className="label" htmlFor="name">Full name</label>
+              <label className="label" htmlFor="name">{t({ es: "Nombre completo", en: "Full name" })}</label>
               <input id="name" className="input" value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="off" />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="label" htmlFor="email">Email</label>
+                <label className="label" htmlFor="email">{t({ es: "Correo", en: "Email" })}</label>
                 <input id="email" type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               <div>
-                <label className="label" htmlFor="phone">Phone</label>
+                <label className="label" htmlFor="phone">{t({ es: "Teléfono", en: "Phone" })}</label>
                 <input id="phone" type="tel" className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+504 …" />
               </div>
             </div>
             <div>
-              <label className="label" htmlFor="country">Country</label>
+              <label className="label" htmlFor="country">{t({ es: "País", en: "Country" })}</label>
               <select id="country" className="input" value={country} onChange={(e) => setCountry(e.target.value)}>
-                <option value="">Select country…</option>
+                <option value="">{t({ es: "Selecciona un país…", en: "Select country…" })}</option>
                 {countries.map((c) => (
                   <option key={c.code} value={c.code}>
                     {c.name}
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-xs text-slate-500">Only countries where MoonPay reports that off-ramp payouts are allowed.</p>
+              <p className="mt-1 text-xs text-slate-500">
+                {t({
+                  es: "Solo países donde MoonPay indica que se permiten pagos de off-ramp.",
+                  en: "Only countries where MoonPay reports that off-ramp payouts are allowed.",
+                })}
+              </p>
             </div>
           </>
         )}
@@ -180,8 +187,10 @@ export function SendForm() {
 
       {effectiveCountry && (
         <section className="card space-y-4">
-          <h2 className="font-semibold">Amount</h2>
-          {corridorLoading && <p className="text-sm text-slate-500">Checking what MoonPay supports for this country…</p>}
+          <h2 className="font-semibold">{t({ es: "Monto", en: "Amount" })}</h2>
+          {corridorLoading && <p className="text-sm text-slate-500">
+              {t({ es: "Revisando qué admite MoonPay para este país…", en: "Checking what MoonPay supports for this country…" })}
+            </p>}
           {corridor?.blockers.length ? (
             <ul className="list-disc space-y-1 pl-5 text-sm text-red-700">
               {corridor.blockers.map((b) => (
@@ -192,9 +201,9 @@ export function SendForm() {
           {corridor && !corridor.blockers.length && (
             <>
               <div>
-                <label className="label" htmlFor="asset">Cryptocurrency</label>
+                <label className="label" htmlFor="asset">{t({ es: "Criptomoneda", en: "Cryptocurrency" })}</label>
                 <select id="asset" className="input" value={assetCode} onChange={(e) => setAssetCode(e.target.value)}>
-                  <option value="">Select USDT network…</option>
+                  <option value="">{t({ es: "Selecciona la red de USDT…", en: "Select USDT network…" })}</option>
                   {corridor.assets.map((a) => (
                     <option key={a.code} value={a.code}>
                       USDT — {networkLabel(a.network) || a.name}
@@ -203,18 +212,21 @@ export function SendForm() {
                 </select>
                 {asset && (asset.minSellAmount != null || asset.maxSellAmount != null) && (
                   <p className="mt-1 text-xs text-slate-500">
-                    MoonPay limits: {asset.minSellAmount ?? "—"} to {asset.maxSellAmount ?? "—"} USDT
+                    {t({
+                      es: `Límites de MoonPay: ${asset.minSellAmount ?? "—"} a ${asset.maxSellAmount ?? "—"} USDT`,
+                      en: `MoonPay limits: ${asset.minSellAmount ?? "—"} to ${asset.maxSellAmount ?? "—"} USDT`,
+                    })}
                   </p>
                 )}
               </div>
               <div>
-                <label className="label" htmlFor="amount">Amount (USDT)</label>
+                <label className="label" htmlFor="amount">{t({ es: "Monto (USDT)", en: "Amount (USDT)" })}</label>
                 <input id="amount" inputMode="decimal" className="input" value={amount} onChange={(e) => setAmount(e.target.value)} />
               </div>
               <div>
-                <label className="label" htmlFor="fiat">Payout currency</label>
+                <label className="label" htmlFor="fiat">{t({ es: "Moneda de pago", en: "Payout currency" })}</label>
                 <select id="fiat" className="input" value={fiat} onChange={(e) => setFiat(e.target.value)}>
-                  <option value="">Select currency…</option>
+                  <option value="">{t({ es: "Selecciona una moneda…", en: "Select currency…" })}</option>
                   {corridor.fiatCurrencies.map((f) => (
                     <option key={f.code} value={f.code}>
                       {f.code.toUpperCase()} — {f.name}
@@ -222,29 +234,40 @@ export function SendForm() {
                   ))}
                 </select>
                 <p className="mt-1 text-xs text-slate-500">
-                  Currencies MoonPay supports for sells. MoonPay confirms the final payout currency when the recipient
-                  adds their card.
+                  {t({
+                    es: "Monedas que MoonPay admite para ventas. MoonPay confirma la moneda de pago final cuando el destinatario agrega su tarjeta.",
+                    en: "Currencies MoonPay supports for sells. MoonPay confirms the final payout currency when the recipient adds their card.",
+                  })}
                 </p>
               </div>
               <div>
-                <label className="label" htmlFor="refund">Your refund wallet address</label>
+                <label className="label" htmlFor="refund">{t({ es: "Dirección de tu billetera para reembolsos", en: "Your refund wallet address" })}</label>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
                   <input
                     id="refund"
                     className="input font-mono text-sm"
                     value={refundAddress}
                     onChange={(e) => setRefundAddress(e.target.value)}
-                    placeholder={asset?.network ? `Your ${networkLabel(asset.network)} address` : "Wallet address"}
+                    placeholder={
+                      asset?.network
+                        ? t({ es: `Tu dirección de ${networkLabel(asset.network)}`, en: `Your ${networkLabel(asset.network)} address` })
+                        : t({ es: "Dirección de billetera", en: "Wallet address" })
+                    }
                     autoComplete="off"
                   />
                   {asset && <UseMyWalletButton network={asset.network} onAddress={setRefundAddress} />}
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
-                  If MoonPay can’t complete the payout, it returns the USDT here. Use a wallet you control.
+                  {t({
+                    es: "Si MoonPay no puede completar el pago, devuelve los USDT aquí. Usa una billetera que tú controles.",
+                    en: "If MoonPay can’t complete the payout, it returns the USDT here. Use a wallet you control.",
+                  })}
                 </p>
               </div>
               <button className="btn-secondary w-full" disabled={!canQuote || busy} onClick={getQuote}>
-                {busy && !quote ? "Getting quote…" : "Get live quote"}
+                {busy && !quote
+                  ? t({ es: "Obteniendo cotización…", en: "Getting quote…" })
+                  : t({ es: "Obtener cotización en vivo", en: "Get live quote" })}
               </button>
             </>
           )}
@@ -270,11 +293,13 @@ export function SendForm() {
             }}
           />
           <button className="btn-primary w-full" disabled={busy || !refundAddress} onClick={createTransfer}>
-            {busy ? "Creating…" : "Create transfer"}
+            {busy ? t({ es: "Creando…", en: "Creating…" }) : t({ es: "Crear envío", en: "Create transfer" })}
           </button>
           <p className="text-xs text-slate-500">
-            Next, your recipient verifies with MoonPay and adds a payout card. MoonPay then issues a one-time deposit
-            address for this transfer and we show it to you. Don’t send any USDT before then.
+            {t({
+              es: "Luego, tu destinatario se verifica con MoonPay y agrega una tarjeta para recibir el pago. Después MoonPay genera una dirección de depósito de un solo uso para este envío y te la mostramos. No envíes USDT antes de eso.",
+              en: "Next, your recipient verifies with MoonPay and adds a payout card. MoonPay then issues a one-time deposit address for this transfer and we show it to you. Don’t send any USDT before then.",
+            })}
           </p>
         </section>
       )}

@@ -4,8 +4,10 @@ import { DbError } from "@/components/cobros/DbError";
 import { MerchantSettings } from "@/components/cobros/MerchantSettings";
 import { stripeStatusFor } from "@/lib/stripe";
 import { liveMethods, resolveMethods, type Method } from "@/lib/cobros/methods";
+import { getT } from "@/lib/i18n/server";
 
 export default async function AjustesPage() {
+  const { t } = await getT();
   const supabase = await createClient();
   const {
     data: { user },
@@ -24,7 +26,7 @@ export default async function AjustesPage() {
   const zelle = (methods.find((m) => m.method === "zelle")?.details ?? {}) as { handle?: string; name?: string };
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Ajustes del comercio</h1>
+      <h1 className="text-2xl font-bold">{t({ es: "Ajustes del comercio", en: "Business settings" })}</h1>
       <MerchantSettings
         initial={{
           name: merchant.business_name,
@@ -38,7 +40,7 @@ export default async function AjustesPage() {
         allowed={allowed}
         liveMethods={live}
         cardStatus={stripe}
-        submitLabel="Guardar"
+        submitLabel={t({ es: "Guardar", en: "Save" })}
         redirectTo="/cobrar"
       />
     </div>

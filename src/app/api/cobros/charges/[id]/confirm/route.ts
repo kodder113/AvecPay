@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getT } from "@/lib/i18n/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -11,16 +12,17 @@ const body = z.object({ received: z.boolean() });
  * ("Recibido"), or sends a reported one back to waiting ("No llegó").
  */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { t } = await getT();
   const { id } = await params;
   const { supabase, user } = await requireUser();
-  if (!user) return jsonError(401, "Inicia sesión");
+  if (!user) return jsonError(401, t({ es: "Inicia sesión", en: "Sign in" }));
   const parsed = body.safeParse(await req.json().catch(() => ({})));
-  if (!parsed.success) return jsonError(400, "Datos inválidos");
+  if (!parsed.success) return jsonError(400, t({ es: "Datos inválidos", en: "Invalid data" }));
 
   // RLS: only the merchant who owns the charge can see it.
   const { data: charge } = await supabase.from("charges").select("id, mode").eq("id", id).maybeSingle();
-  if (!charge) return jsonError(404, "Cobro no encontrado");
-  if (charge.mode !== "live") return jsonError(400, "Los cobros de prueba se confirman solos");
+  if (!charge) return jsonError(404, t({ es: "Cobro no encontrado", en: "Charge not found" }));
+  if (charge.mode !== "live") return jsonError(400, t({ es: "Los cobros de prueba se confirman solos", en: "Test charges confirm on their own" }));
 
   const db = createAdminClient();
   const result = parsed.data.received
@@ -37,6 +39,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         .eq("status", "reported")
         .select("id");
   if (result.error) return jsonError(500, result.error.message);
-  if (!result.data?.length) return jsonError(409, "El cobro cambió de estado. Actualiza la página.");
+  if (!result.data?.length) return jsonError(409, t({ es: "El cobro cambió de estado. Actualiza la página.", en: "The charge changed status. Refresh the page." }));
   return NextResponse.json({ ok: true });
 }

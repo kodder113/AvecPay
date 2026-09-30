@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getT } from "@/lib/i18n/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -14,8 +15,9 @@ const body = z.object({
 
 /** Create a charge (one QR). Offered methods = partner switch ∩ merchant switch. */
 export async function POST(req: Request) {
+  const { t } = await getT();
   const { supabase, user } = await requireUser();
-  if (!user) return jsonError(401, "Inicia sesión");
+  if (!user) return jsonError(401, t({ es: "Inicia sesión", en: "Sign in" }));
   try {
     const input = body.parse(await req.json());
     const { data: merchant } = await supabase
@@ -23,7 +25,7 @@ export async function POST(req: Request) {
       .select("id, currency, mode, partner_id, tips_enabled, merchant_methods(method, enabled, details)")
       .eq("user_id", user.id)
       .maybeSingle();
-    if (!merchant) return jsonError(400, "Primero configura tu comercio");
+    if (!merchant) return jsonError(400, t({ es: "Primero configura tu comercio", en: "Set up your business first" }));
 
     const { data: partner } = await supabase.from("partners").select("allowed_methods").eq("id", merchant.partner_id).single();
     const methods = merchant.merchant_methods ?? [];
@@ -37,9 +39,9 @@ export async function POST(req: Request) {
       allowed = allowed.filter(
         (m) => live.includes(m) && (m !== "zelle" || Boolean(zelle?.handle)) && (m !== "card" || merchant.currency === "USD"),
       );
-      if (!allowed.length) return jsonError(400, "En modo real activa Zelle con tu teléfono o correo en Ajustes");
+      if (!allowed.length) return jsonError(400, t({ es: "En modo real activa Zelle con tu teléfono o correo en Ajustes", en: "In live mode, turn on Zelle with your phone or email in Settings" }));
     }
-    if (!allowed.length) return jsonError(400, "Activa al menos un método de pago en Ajustes");
+    if (!allowed.length) return jsonError(400, t({ es: "Activa al menos un método de pago en Ajustes", en: "Turn on at least one payment method in Settings" }));
 
     // Charges are written server-side only; retry on the rare code collision.
     const db = createAdminClient();
@@ -61,7 +63,7 @@ export async function POST(req: Request) {
       if (!error && data) return NextResponse.json(data, { status: 201 });
       if (error?.code !== "23505") throw error;
     }
-    throw new Error("No se pudo generar un código único");
+    throw new Error(t({ es: "No se pudo generar un código único", en: "Couldn’t generate a unique code" }));
   } catch (e) {
     return handleRouteError(e);
   }

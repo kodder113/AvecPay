@@ -7,6 +7,7 @@ import { appUrl, checkAgainstCorridor, transferInput, validateRefundAddress } fr
 import { getFeePolicy } from "@/lib/fees";
 import { resolveWalletPayContract } from "@/lib/chains";
 import { handleRouteError, jsonError } from "@/lib/http";
+import { getT } from "@/lib/i18n/server";
 
 /**
  * Creates an Avec Pay transfer. The quote is re-fetched server-side; the
@@ -14,16 +15,17 @@ import { handleRouteError, jsonError } from "@/lib/http";
  * address) is created later, when the recipient completes the provider flow.
  */
 export async function POST(req: Request) {
+  const { t } = await getT();
   const { supabase, user } = await requireUser();
-  if (!user) return jsonError(401, "Sign in required");
+  if (!user) return jsonError(401, t({ es: "Debes iniciar sesión", en: "Sign in required" }));
   try {
     const input = transferInput.parse(await req.json());
-    if (!input.recipientId && !input.recipient) return jsonError(400, "Recipient is required");
+    if (!input.recipientId && !input.recipient) return jsonError(400, t({ es: "El destinatario es obligatorio", en: "Recipient is required" }));
 
     const provider = providerForCorridor(input.countryCode);
     const corridor = await provider.getCorridor(input.countryCode);
     const { asset, problems } = checkAgainstCorridor(corridor, input);
-    if (problems.length || !asset) return jsonError(422, "Not supported", problems);
+    if (problems.length || !asset) return jsonError(422, t({ es: "No disponible", en: "Not supported" }), problems);
 
     const addrProblem = validateRefundAddress(input.refundWalletAddress, asset.network);
     if (addrProblem) return jsonError(400, addrProblem);
@@ -41,8 +43,8 @@ export async function POST(req: Request) {
     let recipientId = input.recipientId;
     if (recipientId) {
       const { data, error } = await supabase.from("recipients").select("id, country_code").eq("id", recipientId).single();
-      if (error || !data) return jsonError(404, "Recipient not found");
-      if (data.country_code !== input.countryCode) return jsonError(400, "Recipient country does not match");
+      if (error || !data) return jsonError(404, t({ es: "Destinatario no encontrado", en: "Recipient not found" }));
+      if (data.country_code !== input.countryCode) return jsonError(400, t({ es: "El país del destinatario no coincide", en: "Recipient country does not match" }));
     } else {
       const r = input.recipient!;
       const { data, error } = await supabase
@@ -56,7 +58,7 @@ export async function POST(req: Request) {
         })
         .select("id")
         .single();
-      if (error || !data) throw error ?? new Error("Could not save recipient");
+      if (error || !data) throw error ?? new Error(t({ es: "No se pudo guardar el destinatario", en: "Could not save recipient" }));
       recipientId = data.id;
     }
 
@@ -91,7 +93,7 @@ export async function POST(req: Request) {
       })
       .select("id")
       .single();
-    if (error || !transfer) throw error ?? new Error("Could not create transfer");
+    if (error || !transfer) throw error ?? new Error(t({ es: "No se pudo crear el envío", en: "Could not create transfer" }));
 
     await db.from("transfer_events").insert({ transfer_id: transfer.id, status: "created", source: "system" });
 

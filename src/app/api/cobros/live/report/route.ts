@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { payErrorMessage } from "@/lib/cobros/parse";
 import { jsonError } from "@/lib/http";
+import { getT } from "@/lib/i18n/server";
 
 const body = z.object({
   code: z.string().regex(/^[A-Za-z2-9]{8}$/),
@@ -15,14 +16,15 @@ const body = z.object({
  * No Avec account needed. The charge waits for the merchant to confirm.
  */
 export async function POST(req: Request) {
+  const { lang, t } = await getT();
   const parsed = body.safeParse(await req.json().catch(() => ({})));
-  if (!parsed.success) return jsonError(400, "Datos inválidos");
+  if (!parsed.success) return jsonError(400, t({ es: "Datos inválidos", en: "Invalid data" }));
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("live_report_payment", {
     p_code: parsed.data.code,
     p_tip: parsed.data.tip,
     p_payer_name: parsed.data.payerName ?? "",
   });
-  if (error) return jsonError(400, payErrorMessage(error.message));
+  if (error) return jsonError(400, payErrorMessage(error.message, lang));
   return NextResponse.json(data);
 }

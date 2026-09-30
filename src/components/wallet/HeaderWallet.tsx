@@ -5,6 +5,7 @@ import { useAppKit } from "@reown/appkit/react";
 import { WalletProvider, useEvmWalletEnabled } from "./WalletProvider";
 import { connectTron, hasTronLink } from "@/lib/wallet/tron";
 import { shortAddress } from "@/lib/chains";
+import { useT } from "@/components/i18n/LangProvider";
 
 /**
  * Top-bar wallet button. Connecting only shares the wallet's address with the
@@ -36,6 +37,7 @@ function WithEvm() {
 }
 
 function Panel({ evm }: { evm: EvmControls | null }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [tron, setTron] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -63,26 +65,33 @@ function Panel({ evm }: { evm: EvmControls | null }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-semibold ${
+        className={`whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-semibold sm:px-3 ${
           connected ? "border border-white/25 text-white" : "bg-brand-yellow text-brand-ink"
         }`}
       >
-        {connected ? <span className="font-mono">{shortAddress(connected)}</span> : "Connect wallet"}
+        {connected ? (
+          <span className="font-mono">{shortAddress(connected)}</span>
+        ) : (
+          <>
+            <span className="sm:hidden">{t({ es: "Billetera", en: "Wallet" })}</span>
+            <span className="hidden sm:inline">{t({ es: "Conectar billetera", en: "Connect wallet" })}</span>
+          </>
+        )}
       </button>
 
       {open && (
         <>
-          <button type="button" aria-label="Close" className="fixed inset-0 z-10 cursor-default" onClick={() => setOpen(false)} />
+          <button type="button" aria-label={t({ es: "Cerrar", en: "Close" })} className="fixed inset-0 z-10 cursor-default" onClick={() => setOpen(false)} />
           <div className="absolute right-0 z-20 mt-2 w-72 space-y-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-800 shadow-xl">
-            <p className="font-semibold">Your wallet</p>
+            <p className="font-semibold">{t({ es: "Tu billetera", en: "Your wallet" })}</p>
 
             <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Ethereum, Polygon & more</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t({ es: "Ethereum, Polygon y más", en: "Ethereum, Polygon & more" })}</p>
               {evm?.address ? (
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono">{shortAddress(evm.address)}</span>
                   <button type="button" className="text-xs text-red-600 underline" onClick={evm.disconnect}>
-                    Disconnect
+                    {t({ es: "Desconectar", en: "Disconnect" })}
                   </button>
                 </div>
               ) : evm ? (
@@ -90,7 +99,12 @@ function Panel({ evm }: { evm: EvmControls | null }) {
                   MetaMask, Trust, Coinbase…
                 </button>
               ) : (
-                <p className="text-xs text-slate-500">WalletConnect isn’t set up yet (needs the Reown Project ID).</p>
+                <p className="text-xs text-slate-500">
+                  {t({
+                    es: "WalletConnect aún no está configurado (necesita el Project ID de Reown).",
+                    en: "WalletConnect isn’t set up yet (needs the Reown Project ID).",
+                  })}
+                </p>
               )}
             </div>
 
@@ -104,13 +118,18 @@ function Panel({ evm }: { evm: EvmControls | null }) {
                 </button>
               ) : (
                 <a className="text-xs text-brand-ink underline" href="https://www.tronlink.org/" target="_blank" rel="noreferrer">
-                  Install TronLink to use Tron
+                  {t({ es: "Instala TronLink para usar Tron", en: "Install TronLink to use Tron" })}
                 </a>
               )}
             </div>
 
             {error && <p className="text-xs text-red-600">{error}</p>}
-            <p className="text-xs text-slate-500">Connecting only shares your address. Every payment is approved in your wallet.</p>
+            <p className="text-xs text-slate-500">
+              {t({
+                es: "Conectar solo comparte tu dirección. Cada pago se aprueba en tu billetera.",
+                en: "Connecting only shares your address. Every payment is approved in your wallet.",
+              })}
+            </p>
           </div>
         </>
       )}

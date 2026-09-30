@@ -3,9 +3,9 @@
 /** Triangle mark + "Avec Pay" wordmark, for use on the dark brand background. */
 export function Logo({ size = 32 }: { size?: number }) {
   return (
-    <span className="inline-flex items-center gap-2">
+    <span className="inline-flex shrink-0 items-center gap-1.5 sm:gap-2">
       <img src="/brand/avecpay-mark.png" alt="" width={size} height={size} />
-      <span className="whitespace-nowrap text-xl font-black italic tracking-tight text-white">Avec Pay</span>
+      <span className="whitespace-nowrap text-lg font-black italic tracking-tight text-white sm:text-xl">Avec Pay</span>
     </span>
   );
 }

@@ -5,6 +5,7 @@ import { useAppKit } from "@reown/appkit/react";
 import { WalletProvider, useEvmWalletEnabled } from "./WalletProvider";
 import { connectTron, hasTronLink } from "@/lib/wallet/tron";
 import { usdtChainForNetwork } from "@/lib/chains";
+import { useT } from "@/components/i18n/LangProvider";
 
 interface Props {
   network: string | null;
@@ -29,6 +30,7 @@ function Inner({ network, onAddress }: Props) {
 }
 
 function EvmButton({ onAddress }: { onAddress: (a: string) => void }) {
+  const t = useT();
   const { open } = useAppKit();
   const { address, isConnected } = useAccount();
   const [waiting, setWaiting] = useState(false);
@@ -53,12 +55,13 @@ function EvmButton({ onAddress }: { onAddress: (a: string) => void }) {
         }
       }}
     >
-      Use my wallet
+      {t({ es: "Usar mi billetera", en: "Use my wallet" })}
     </button>
   );
 }
 
 function TronButton({ onAddress }: { onAddress: (a: string) => void }) {
+  const t = useT();
   const [error, setError] = useState<string | null>(null);
   if (!hasTronLink()) return null;
   return (
@@ -75,7 +78,7 @@ function TronButton({ onAddress }: { onAddress: (a: string) => void }) {
           }
         }}
       >
-        Use TronLink
+        {t({ es: "Usar TronLink", en: "Use TronLink" })}
       </button>
       {error && <span className="text-xs text-red-600">{error}</span>}
     </span>

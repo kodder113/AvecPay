@@ -1,4 +1,5 @@
 import { STATUS_LABELS, type TransferStatus } from "@/lib/status";
+import { getT } from "@/lib/i18n/server";
 
 const COLORS: Record<TransferStatus, string> = {
   created: "bg-slate-100 text-slate-700",
@@ -10,10 +11,11 @@ const COLORS: Record<TransferStatus, string> = {
   failed: "bg-red-100 text-red-800",
 };
 
-export function StatusBadge({ status }: { status: TransferStatus }) {
+export async function StatusBadge({ status }: { status: TransferStatus }) {
+  const { t } = await getT();
   return (
     <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${COLORS[status]}`}>
-      {STATUS_LABELS[status]}
+      {t(STATUS_LABELS[status])}
     </span>
   );
 }

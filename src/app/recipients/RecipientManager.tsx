@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { countryName } from "@/lib/format";
+import { useLang, useT } from "@/components/i18n/LangProvider";
 
 interface Recipient {
   id: string;
@@ -11,6 +12,8 @@ interface Recipient {
 }
 
 export function RecipientManager({ initial }: { initial: Recipient[] }) {
+  const t = useT();
+  const lang = useLang();
   const [items, setItems] = useState(initial);
   const [countries, setCountries] = useState<{ code: string; name: string }[]>([]);
   const [form, setForm] = useState({ fullName: "", email: "", phone: "", countryCode: "" });
@@ -51,21 +54,21 @@ export function RecipientManager({ initial }: { initial: Recipient[] }) {
             <div className="min-w-0">
               <p className="font-semibold">{r.full_name}</p>
               <p className="truncate text-sm text-slate-600">{[r.email, r.phone].filter(Boolean).join(" · ")}</p>
-              <p className="text-xs text-slate-500">{countryName(r.country_code)}</p>
+              <p className="text-xs text-slate-500">{countryName(r.country_code, lang)}</p>
             </div>
             <button className="text-sm text-red-600" onClick={() => remove(r.id)}>
-              Delete
+              {t({ es: "Eliminar", en: "Delete" })}
             </button>
           </li>
         ))}
       </ul>
       <form onSubmit={add} className="card space-y-3">
-        <h2 className="font-semibold">Add recipient</h2>
-        <input className="input" placeholder="Full name" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
-        <input className="input" type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-        <input className="input" type="tel" placeholder="Phone (+504 …)" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+        <h2 className="font-semibold">{t({ es: "Agregar destinatario", en: "Add recipient" })}</h2>
+        <input className="input" placeholder={t({ es: "Nombre completo", en: "Full name" })} value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
+        <input className="input" type="email" placeholder={t({ es: "Correo", en: "Email" })} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+        <input className="input" type="tel" placeholder={t({ es: "Teléfono (+504 …)", en: "Phone (+504 …)" })} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         <select className="input" value={form.countryCode} onChange={(e) => setForm({ ...form, countryCode: e.target.value })}>
-          <option value="">Country…</option>
+          <option value="">{t({ es: "País…", en: "Country…" })}</option>
           {countries.map((c) => (
             <option key={c.code} value={c.code}>
               {c.name}
@@ -74,7 +77,7 @@ export function RecipientManager({ initial }: { initial: Recipient[] }) {
         </select>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button className="btn-primary w-full" disabled={busy}>
-          Save recipient
+          {t({ es: "Guardar destinatario", en: "Save recipient" })}
         </button>
       </form>
     </div>
