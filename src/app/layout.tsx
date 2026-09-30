@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import { SandboxBanner } from "@/components/SandboxBanner";
 import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
 import { Logo } from "@/components/Logo";
@@ -22,11 +23,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body>
-        {sandbox && (
-          <div className="bg-amber-100 px-4 py-1 text-center text-xs font-medium text-amber-900">
-            Sandbox mode — MoonPay test environment. No real funds move.
-          </div>
-        )}
+        {sandbox && <SandboxBanner />}
         <header className="bg-brand-ink">
           <nav className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
             <Link href={user ? "/dashboard" : "/"} aria-label="Avec Pay home">

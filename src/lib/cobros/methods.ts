@@ -3,7 +3,7 @@
  * levels: the partner (Avec direct, or a bank's white-label, e.g. fiat-only)
  * and the merchant. A charge offers the intersection, fixed at creation.
  */
-export const METHODS = ["bank_transfer", "tigo_money", "card", "lightning", "usdt"] as const;
+export const METHODS = ["bank_transfer", "tigo_money", "card", "lightning", "usdt", "zelle"] as const;
 export type Method = (typeof METHODS)[number];
 
 export interface MethodInfo {
@@ -44,7 +44,19 @@ export const METHOD_INFO: Record<Method, MethodInfo> = {
     kind: "crypto",
     description: "Dólar digital (stablecoin).",
   },
+  zelle: {
+    label: "Zelle",
+    short: "Zelle",
+    kind: "fiat",
+    description: "Desde la app de tu banco en EE. UU.",
+  },
 };
+
+/**
+ * Methods that can take real money today; the rest are demo-only for now.
+ * Card / Apple Pay joins this list once the Stripe checkout is switched on.
+ */
+export const LIVE_METHODS: readonly Method[] = ["zelle"];
 
 export function isMethod(v: unknown): v is Method {
   return typeof v === "string" && (METHODS as readonly string[]).includes(v);

@@ -9,7 +9,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!user) return jsonError(401, "Inicia sesión");
   const { data } = await supabase
     .from("charges")
-    .select("id, code, status, amount, tip_amount, currency, paid_method, paid_reference, payer_name, paid_at, expires_at")
+    .select("id, code, mode, status, amount, tip_amount, currency, reported_at, paid_method, paid_reference, payer_name, paid_at, expires_at")
     .eq("id", id)
     .maybeSingle();
   if (!data) return jsonError(404, "Cobro no encontrado");

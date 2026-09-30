@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { resolveMethods } from "@/lib/cobros/methods";
+import { LIVE_METHODS, resolveMethods } from "@/lib/cobros/methods";
 import { generateChargeCode } from "@/lib/cobros/code";
 import { handleRouteError, jsonError } from "@/lib/http";
 
@@ -19,14 +19,21 @@ export async function POST(req: Request) {
     const input = body.parse(await req.json());
     const { data: merchant } = await supabase
       .from("merchants")
-      .select("id, currency, partner_id, tips_enabled, merchant_methods(method, enabled)")
+      .select("id, currency, mode, partner_id, tips_enabled, merchant_methods(method, enabled, details)")
       .eq("user_id", user.id)
       .maybeSingle();
     if (!merchant) return jsonError(400, "Primero configura tu comercio");
 
     const { data: partner } = await supabase.from("partners").select("allowed_methods").eq("id", merchant.partner_id).single();
-    const enabled = (merchant.merchant_methods ?? []).filter((m) => m.enabled).map((m) => m.method as string);
-    const allowed = resolveMethods(partner?.allowed_methods ?? [], enabled);
+    const methods = merchant.merchant_methods ?? [];
+    const enabled = methods.filter((m) => m.enabled).map((m) => m.method as string);
+    let allowed = resolveMethods(partner?.allowed_methods ?? [], enabled);
+    if (merchant.mode === "live") {
+      // Real money: only methods that actually work live, and Zelle only with a handle.
+      const zelle = methods.find((m) => m.method === "zelle")?.details as { handle?: string } | undefined;
+      allowed = allowed.filter((m) => LIVE_METHODS.includes(m) && (m !== "zelle" || Boolean(zelle?.handle)));
+      if (!allowed.length) return jsonError(400, "En modo real activa Zelle con tu teléfono o correo en Ajustes");
+    }
     if (!allowed.length) return jsonError(400, "Activa al menos un método de pago en Ajustes");
 
     // Charges are written server-side only; retry on the rare code collision.
@@ -37,7 +44,7 @@ export async function POST(req: Request) {
         .insert({
           merchant_id: merchant.id,
           code: generateChargeCode(),
-          mode: "demo",
+          mode: merchant.mode,
           amount: input.amount,
           currency: merchant.currency,
           description: input.description || null,

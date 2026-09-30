@@ -1,7 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { PayFlow } from "@/components/cobros/PayFlow";
-import { DemoPill } from "@/components/cobros/DemoPill";
+import { ModePill } from "@/components/cobros/DemoPill";
+import { LivePayFlow } from "@/components/cobros/LivePayFlow";
 import { formatMoney } from "@/lib/cobros/parse";
 import { isMethod } from "@/lib/cobros/methods";
 
@@ -16,7 +17,7 @@ export default async function PagarPage({ params }: { params: Promise<{ code: st
   const { data: charge } = valid
     ? await createAdminClient()
         .from("charges")
-        .select("code, status, amount, currency, description, allowed_methods, tips_allowed, expires_at, merchants(business_name)")
+        .select("code, mode, status, amount, currency, description, allowed_methods, tips_allowed, expires_at, merchant_id, merchants(business_name)")
         .eq("code", code)
         .maybeSingle()
     : { data: null };
@@ -29,12 +30,25 @@ export default async function PagarPage({ params }: { params: Promise<{ code: st
   const businessName = merchant?.business_name ?? "Comercio";
   const expired = new Date(charge.expires_at) < new Date();
 
+  const live = charge.mode === "live";
+  let zelle: { handle: string; name: string } | null = null;
+  if (live && (charge.allowed_methods as string[]).includes("zelle")) {
+    const { data: m } = await createAdminClient()
+      .from("merchant_methods")
+      .select("details")
+      .eq("merchant_id", charge.merchant_id)
+      .eq("method", "zelle")
+      .maybeSingle();
+    const d = (m?.details ?? {}) as { handle?: string; name?: string };
+    if (d.handle) zelle = { handle: d.handle, name: d.name || businessName };
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   let demoAccount: { account_number: string; balance: number } | null = null;
-  if (user) {
+  if (user && !live) {
     const { data } = await supabase.rpc("demo_ensure_account");
     if (data) demoAccount = { account_number: data.account_number, balance: data.balance };
   }
@@ -42,19 +56,30 @@ export default async function PagarPage({ params }: { params: Promise<{ code: st
   return (
     <div className="space-y-4">
       <div className="card space-y-1 text-center">
-        <DemoPill />
+        <ModePill mode={charge.mode} />
         <p className="pt-2 text-sm text-slate-500">Pagar a</p>
         <h1 className="text-2xl font-bold">{businessName}</h1>
         <p className="text-4xl font-black">{formatMoney(charge.amount, charge.currency)}</p>
         {charge.description && <p className="text-sm text-slate-600">{charge.description}</p>}
       </div>
 
-      {charge.status === "paid" ? (
+      {charge.status === "reported" ? (
+        <p className="card text-center text-slate-700">Pago reportado. Esperando que el comercio lo confirme.</p>
+      ) : charge.status === "paid" ? (
         <p className="card text-center font-semibold text-emerald-700">Este cobro ya fue pagado. ✓</p>
       ) : charge.status === "cancelled" ? (
         <p className="card text-center text-slate-700">El comercio canceló este cobro.</p>
       ) : expired ? (
         <p className="card text-center text-slate-700">Este cobro venció. Pide un nuevo QR.</p>
+      ) : live ? (
+        <LivePayFlow
+          code={charge.code}
+          amount={charge.amount}
+          currency={charge.currency}
+          businessName={businessName}
+          tipsAllowed={charge.tips_allowed}
+          zelle={zelle}
+        />
       ) : (
         <PayFlow
           code={charge.code}

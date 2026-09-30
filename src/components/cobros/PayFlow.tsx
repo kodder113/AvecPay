@@ -3,7 +3,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { METHOD_INFO, type Method } from "@/lib/cobros/methods";
 import { formatMoney } from "@/lib/cobros/parse";
-import { TIP_PERCENTS, addMoney, parseTip, tipForPercent } from "@/lib/cobros/tip";
+import { addMoney } from "@/lib/cobros/tip";
+import { TipPicker } from "./TipPicker";
 
 interface Props {
   code: string;
@@ -15,7 +16,7 @@ interface Props {
   tipsAllowed: boolean;
 }
 
-const ICON: Record<Method, string> = { bank_transfer: "🏦", tigo_money: "📱", card: "💳", lightning: "⚡", usdt: "💵" };
+const ICON: Record<Method, string> = { bank_transfer: "🏦", tigo_money: "📱", card: "💳", lightning: "⚡", usdt: "💵", zelle: "🇺🇸" };
 
 /** Customer flow: pick a method, see its (simulated) screen, pay from Banco Demo. */
 export function PayFlow({ code, amount, currency, businessName, methods, demoAccount, tipsAllowed }: Props) {
@@ -23,11 +24,7 @@ export function PayFlow({ code, amount, currency, businessName, methods, demoAcc
   const [stage, setStage] = useState<"choose" | "processing" | "done">("choose");
   const [error, setError] = useState<string | null>(null);
   const [reference, setReference] = useState<string | null>(null);
-  // Tip: a suggested percentage, a typed amount ("custom"), or none.
-  const [tipChoice, setTipChoice] = useState<number | "custom" | null>(null);
-  const [customTip, setCustomTip] = useState("");
-  const tip =
-    !tipsAllowed || tipChoice === null ? 0 : tipChoice === "custom" ? parseTip(customTip, amount) : tipForPercent(amount, tipChoice);
+  const [tip, setTip] = useState<number | null>(0);
   const total = addMoney(amount, tip ?? 0);
   const money = formatMoney(total, currency);
 
@@ -99,37 +96,7 @@ export function PayFlow({ code, amount, currency, businessName, methods, demoAcc
         </div>
       </div>
 
-      {tipsAllowed && (
-        <div className="card space-y-3">
-          <h2 className="font-semibold">¿Agregar propina?</h2>
-          <div className="grid grid-cols-5 gap-2">
-            <TipButton active={tipChoice === null} onClick={() => setTipChoice(null)} label="No" />
-            {TIP_PERCENTS.map((p) => (
-              <TipButton key={p} active={tipChoice === p} onClick={() => setTipChoice(p)} label={`${p}%`} sub={formatMoney(tipForPercent(amount, p), currency)} />
-            ))}
-            <TipButton active={tipChoice === "custom"} onClick={() => setTipChoice("custom")} label="Otro" />
-          </div>
-          {tipChoice === "custom" && (
-            <div className="space-y-1">
-              <input
-                className="input"
-                inputMode="decimal"
-                autoFocus
-                placeholder="Monto de propina, ej. 30"
-                value={customTip}
-                onChange={(e) => setCustomTip(e.target.value.replace(/[^0-9.,]/g, ""))}
-                aria-label="Propina"
-              />
-              {tip === null && <p className="text-xs text-red-600">Escribe un monto válido, hasta {formatMoney(amount, currency)}.</p>}
-            </div>
-          )}
-          <dl className="space-y-1 border-t border-slate-100 pt-3 text-sm">
-            <div className="flex justify-between"><dt className="text-slate-500">Subtotal</dt><dd>{formatMoney(amount, currency)}</dd></div>
-            <div className="flex justify-between"><dt className="text-slate-500">Propina</dt><dd>{formatMoney(tip ?? 0, currency)}</dd></div>
-            <div className="flex justify-between text-base font-bold"><dt>Total</dt><dd>{money}</dd></div>
-          </dl>
-        </div>
-      )}
+      {tipsAllowed && <TipPicker amount={amount} currency={currency} onChange={setTip} />}
 
       {method && <MethodScreen method={method} money={money} businessName={businessName} code={code} account={demoAccount?.account_number ?? null} />}
 
@@ -150,19 +117,6 @@ export function PayFlow({ code, amount, currency, businessName, methods, demoAcc
         </Link>
       )}
     </div>
-  );
-}
-
-function TipButton({ active, onClick, label, sub }: { active: boolean; onClick: () => void; label: string; sub?: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex flex-col items-center justify-center rounded-xl border-2 px-1 py-2 text-sm font-semibold ${active ? "border-brand-ink bg-brand-yellow" : "border-slate-200"}`}
-    >
-      {label}
-      {sub && <span className="text-[10px] font-normal text-slate-600">{sub}</span>}
-    </button>
   );
 }
 
@@ -200,6 +154,13 @@ function MethodScreen({ method, money, businessName, code, account }: { method: 
           <p className="font-semibold">Bitcoin Lightning (simulado)</p>
           <p className="break-all font-mono text-xs text-slate-500">lnbc{code.toLowerCase()}demo1p…</p>
           <p>Factura por {money}, pagada al instante.</p>
+        </div>
+      );
+    case "zelle":
+      return (
+        <div className={box}>
+          <p className="font-semibold">Zelle (simulado)</p>
+          <p>Enviarías {money} a {businessName} desde la app de tu banco.</p>
         </div>
       );
     case "usdt":
