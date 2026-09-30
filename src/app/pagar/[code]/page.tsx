@@ -9,8 +9,15 @@ import { isMethod } from "@/lib/cobros/methods";
 export const dynamic = "force-dynamic";
 
 /** Public page a customer lands on after scanning the merchant's QR. */
-export default async function PagarPage({ params }: { params: Promise<{ code: string }> }) {
+export default async function PagarPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ code: string }>;
+  searchParams: Promise<{ pagado?: string }>;
+}) {
   const { code: raw } = await params;
+  const returnedFromCard = (await searchParams).pagado === "1";
   const code = raw.toUpperCase();
   const valid = /^[A-Z2-9]{8}$/.test(code);
 
@@ -66,7 +73,15 @@ export default async function PagarPage({ params }: { params: Promise<{ code: st
       {charge.status === "reported" ? (
         <p className="card text-center text-slate-700">Pago reportado. Esperando que el comercio lo confirme.</p>
       ) : charge.status === "paid" ? (
-        <p className="card text-center font-semibold text-emerald-700">Este cobro ya fue pagado. ✓</p>
+        returnedFromCard ? (
+          <div className="card space-y-2 border-emerald-300 bg-emerald-50 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-4xl text-white">✓</div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-800">Pago confirmado</p>
+            <p className="text-slate-700">{businessName} recibió tu pago. ¡Gracias!</p>
+          </div>
+        ) : (
+          <p className="card text-center font-semibold text-emerald-700">Este cobro ya fue pagado. ✓</p>
+        )
       ) : charge.status === "cancelled" ? (
         <p className="card text-center text-slate-700">El comercio canceló este cobro.</p>
       ) : expired ? (
@@ -79,6 +94,8 @@ export default async function PagarPage({ params }: { params: Promise<{ code: st
           businessName={businessName}
           tipsAllowed={charge.tips_allowed}
           zelle={zelle}
+          card={(charge.allowed_methods as string[]).includes("card")}
+          returned={returnedFromCard}
         />
       ) : (
         <PayFlow

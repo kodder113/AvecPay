@@ -2,12 +2,17 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ChargeForm } from "@/components/cobros/ChargeForm";
 import { MerchantSettings } from "@/components/cobros/MerchantSettings";
+import { stripeEnabledFor } from "@/lib/stripe";
 import { DemoPill, ModePill } from "@/components/cobros/DemoPill";
 import { DbError } from "@/components/cobros/DbError";
-import { METHODS, resolveMethods } from "@/lib/cobros/methods";
+import { METHODS, liveMethods, resolveMethods } from "@/lib/cobros/methods";
 
 export default async function CobrarPage() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const live = liveMethods(stripeEnabledFor(user?.email));
   const { data: merchant, error } = await supabase.from("merchants").select("business_name, currency, mode").maybeSingle();
   if (error) return <DbError message={error.message} />;
 
@@ -24,6 +29,7 @@ export default async function CobrarPage() {
         <MerchantSettings
           initial={{ name: "", enabled: allowed.filter((m) => m !== "zelle"), tipsEnabled: true, mode: "demo", currency: "HNL", zelleHandle: "", zelleName: "" }}
           allowed={allowed}
+        liveMethods={live}
           submitLabel="Crear mi comercio"
           redirectTo="/cobrar"
         />
@@ -46,7 +52,7 @@ export default async function CobrarPage() {
       <ChargeForm currencySymbol={merchant.currency === "HNL" ? "L" : "$"} />
       <p className="text-center text-xs text-slate-500">
         {merchant.mode === "live"
-          ? "Modo real: el cliente te paga directo a tu banco (Zelle). Tú confirmas al verlo llegar."
+          ? "Modo real: el cliente te paga directo (Zelle a tu banco, o tarjeta por Stripe si está activado)."
           : "Modo demo: los pagos usan cuentas de Banco Demo con dinero de prueba."}
       </p>
     </div>

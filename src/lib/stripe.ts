@@ -22,6 +22,8 @@ export interface CheckoutInput {
   tipCents: number;
   successUrl: string;
   cancelUrl: string;
+  /** Unix seconds; Stripe accepts 30 minutes to 24 hours from now. */
+  expiresAt?: number;
 }
 
 export async function createCheckoutSession(input: CheckoutInput): Promise<{ id: string; url: string }> {
@@ -38,6 +40,7 @@ export async function createCheckoutSession(input: CheckoutInput): Promise<{ id:
     "metadata[tip_cents]": String(input.tipCents),
     "payment_intent_data[metadata][charge_id]": input.chargeId,
   });
+  if (input.expiresAt) form.set("expires_at", String(input.expiresAt));
   const res = await fetch(`${API()}/v1/checkout/sessions`, {
     method: "POST",
     headers: {

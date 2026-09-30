@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LIVE_METHODS, METHOD_INFO, type Method } from "@/lib/cobros/methods";
+import { METHOD_INFO, type Method } from "@/lib/cobros/methods";
 
 export interface MerchantSettingsValues {
   name: string;
@@ -16,12 +16,14 @@ export interface MerchantSettingsValues {
 interface Props {
   initial: MerchantSettingsValues;
   allowed: Method[];
+  /** Methods that move real money for this merchant (card only with Stripe). */
+  liveMethods: readonly Method[];
   submitLabel: string;
   redirectTo: string;
 }
 
 /** Business profile, demo/real mode, currency, payment-method switches and tips. */
-export function MerchantSettings({ initial, allowed, submitLabel, redirectTo }: Props) {
+export function MerchantSettings({ initial, allowed, liveMethods, submitLabel, redirectTo }: Props) {
   const router = useRouter();
   const [v, setV] = useState(initial);
   const [busy, setBusy] = useState(false);
@@ -35,8 +37,8 @@ export function MerchantSettings({ initial, allowed, submitLabel, redirectTo }: 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!v.enabled.length) return setError("Activa al menos un método de pago.");
-    if (v.mode === "live" && !v.enabled.some((m) => LIVE_METHODS.includes(m))) {
-      return setError("En modo real activa Zelle (por ahora es el método con dinero real).");
+    if (v.mode === "live" && !v.enabled.some((m) => liveMethods.includes(m))) {
+      return setError(`En modo real activa ${liveText}.`);
     }
     setBusy(true);
     setError(null);
@@ -59,6 +61,7 @@ export function MerchantSettings({ initial, allowed, submitLabel, redirectTo }: 
     router.refresh();
   }
 
+  const liveText = liveMethods.map((m) => METHOD_INFO[m].label).join(" o ");
   const segment = (active: boolean) => `flex-1 rounded-xl border-2 px-3 py-3 text-sm font-semibold ${active ? "border-brand-ink bg-brand-yellow" : "border-slate-200"}`;
 
   return (
@@ -90,11 +93,11 @@ export function MerchantSettings({ initial, allowed, submitLabel, redirectTo }: 
           <h2 className="font-semibold">Métodos de pago</h2>
           <p className="text-sm text-slate-500">
             El dinero siempre va directo a tu cuenta o billetera.{" "}
-            {v.mode === "live" && "En modo real, por ahora solo Zelle mueve dinero real."}
+            {v.mode === "live" && `En modo real, por ahora solo ${liveText} mueve dinero real.`}
           </p>
         </div>
         {allowed.map((m) => {
-          const liveOk = LIVE_METHODS.includes(m);
+          const liveOk = liveMethods.includes(m);
           return (
             <div key={m} className="rounded-xl border border-slate-200 p-3">
               <label className="flex cursor-pointer items-center justify-between gap-3">
@@ -102,6 +105,9 @@ export function MerchantSettings({ initial, allowed, submitLabel, redirectTo }: 
                   <span className="block font-medium">
                     {METHOD_INFO[m].label}
                     {v.mode === "live" && !liveOk && <span className="ml-2 text-xs font-normal text-slate-400">solo demo</span>}
+                    {v.mode === "live" && liveOk && m === "card" && v.currency !== "USD" && (
+                      <span className="ml-2 text-xs font-normal text-slate-400">solo en dólares</span>
+                    )}
                   </span>
                   <span className="block text-xs text-slate-500">{METHOD_INFO[m].description}</span>
                 </span>

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { LIVE_METHODS, resolveMethods } from "@/lib/cobros/methods";
+import { liveMethods, resolveMethods } from "@/lib/cobros/methods";
+import { stripeEnabledFor } from "@/lib/stripe";
 import { generateChargeCode } from "@/lib/cobros/code";
 import { handleRouteError, jsonError } from "@/lib/http";
 
@@ -29,9 +30,13 @@ export async function POST(req: Request) {
     const enabled = methods.filter((m) => m.enabled).map((m) => m.method as string);
     let allowed = resolveMethods(partner?.allowed_methods ?? [], enabled);
     if (merchant.mode === "live") {
-      // Real money: only methods that actually work live, and Zelle only with a handle.
+      // Real money: only methods that actually work live. Zelle needs a handle;
+      // card needs this merchant's Stripe and dollars.
       const zelle = methods.find((m) => m.method === "zelle")?.details as { handle?: string } | undefined;
-      allowed = allowed.filter((m) => LIVE_METHODS.includes(m) && (m !== "zelle" || Boolean(zelle?.handle)));
+      const live = liveMethods(stripeEnabledFor(user.email));
+      allowed = allowed.filter(
+        (m) => live.includes(m) && (m !== "zelle" || Boolean(zelle?.handle)) && (m !== "card" || merchant.currency === "USD"),
+      );
       if (!allowed.length) return jsonError(400, "En modo real activa Zelle con tu teléfono o correo en Ajustes");
     }
     if (!allowed.length) return jsonError(400, "Activa al menos un método de pago en Ajustes");

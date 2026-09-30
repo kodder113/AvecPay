@@ -2,10 +2,15 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DbError } from "@/components/cobros/DbError";
 import { MerchantSettings } from "@/components/cobros/MerchantSettings";
-import { resolveMethods, type Method } from "@/lib/cobros/methods";
+import { stripeEnabledFor } from "@/lib/stripe";
+import { liveMethods, resolveMethods, type Method } from "@/lib/cobros/methods";
 
 export default async function AjustesPage() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const live = liveMethods(stripeEnabledFor(user?.email));
   const { data: merchant, error } = await supabase
     .from("merchants")
     .select("business_name, partner_id, tips_enabled, mode, currency, merchant_methods(method, enabled, details)")
@@ -30,6 +35,7 @@ export default async function AjustesPage() {
           zelleName: zelle.name ?? "",
         }}
         allowed={allowed}
+        liveMethods={live}
         submitLabel="Guardar"
         redirectTo="/cobrar"
       />

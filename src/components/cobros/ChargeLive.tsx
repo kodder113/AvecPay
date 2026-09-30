@@ -110,7 +110,11 @@ export function ChargeLive({ initial, businessName }: { initial: ChargeView; bus
             {charge.paid_at && formatDateTime(charge.paid_at)}
           </p>
           <p className="text-xs text-slate-500">
-            {live ? "Confirmado por ti al verlo en tu banco. Avec no toca el dinero." : "El dinero está en tu cuenta de Banco Demo, no en Avec."}
+            {!live
+              ? "El dinero está en tu cuenta de Banco Demo, no en Avec."
+              : charge.paid_method === "card"
+                ? "Cobrado por Stripe. Llega a tu banco con el próximo depósito de Stripe. Avec no toca el dinero."
+                : "Confirmado por ti al verlo en tu banco. Avec no toca el dinero."}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">

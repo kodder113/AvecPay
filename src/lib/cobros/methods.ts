@@ -54,9 +54,11 @@ export const METHOD_INFO: Record<Method, MethodInfo> = {
 
 /**
  * Methods that can take real money today; the rest are demo-only for now.
- * Card / Apple Pay joins this list once the Stripe checkout is switched on.
+ * Card / Apple Pay needs Stripe set up for this merchant.
  */
-export const LIVE_METHODS: readonly Method[] = ["zelle"];
+export function liveMethods(stripe: boolean): readonly Method[] {
+  return stripe ? ["zelle", "card"] : ["zelle"];
+}
 
 export function isMethod(v: unknown): v is Method {
   return typeof v === "string" && (METHODS as readonly string[]).includes(v);
