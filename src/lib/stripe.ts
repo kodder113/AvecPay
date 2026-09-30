@@ -8,10 +8,21 @@ import { createHmac, timingSafeEqual } from "crypto";
  */
 const API = () => (process.env.STRIPE_API_BASE ?? "https://api.stripe.com").replace(/\/$/, "");
 
+/**
+ * Why card isn't on for this merchant, or "ok". Names only what's missing,
+ * never a value, so it can be shown in Ajustes.
+ */
+export function stripeStatusFor(email: string | null | undefined): "ok" | "missing_key" | "missing_webhook_secret" | "missing_owner" | "not_owner" {
+  if (!process.env.STRIPE_SECRET_KEY?.trim()) return "missing_key";
+  if (!process.env.STRIPE_WEBHOOK_SECRET?.trim()) return "missing_webhook_secret";
+  const owner = process.env.AVEC_STRIPE_OWNER_EMAIL?.trim().toLowerCase();
+  if (!owner) return "missing_owner";
+  return email?.trim().toLowerCase() === owner ? "ok" : "not_owner";
+}
+
 /** Stripe is set up, and this merchant (by owner email) may use it. */
 export function stripeEnabledFor(email: string | null | undefined): boolean {
-  const owner = process.env.AVEC_STRIPE_OWNER_EMAIL?.trim().toLowerCase();
-  return Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET && owner && email?.toLowerCase() === owner);
+  return stripeStatusFor(email) === "ok";
 }
 
 export interface CheckoutInput {

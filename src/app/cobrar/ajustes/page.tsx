@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DbError } from "@/components/cobros/DbError";
 import { MerchantSettings } from "@/components/cobros/MerchantSettings";
-import { stripeEnabledFor } from "@/lib/stripe";
+import { stripeStatusFor } from "@/lib/stripe";
 import { liveMethods, resolveMethods, type Method } from "@/lib/cobros/methods";
 
 export default async function AjustesPage() {
@@ -10,7 +10,8 @@ export default async function AjustesPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const live = liveMethods(stripeEnabledFor(user?.email));
+  const stripe = stripeStatusFor(user?.email);
+  const live = liveMethods(stripe === "ok");
   const { data: merchant, error } = await supabase
     .from("merchants")
     .select("business_name, partner_id, tips_enabled, mode, currency, merchant_methods(method, enabled, details)")
@@ -36,6 +37,7 @@ export default async function AjustesPage() {
         }}
         allowed={allowed}
         liveMethods={live}
+        cardStatus={stripe}
         submitLabel="Guardar"
         redirectTo="/cobrar"
       />

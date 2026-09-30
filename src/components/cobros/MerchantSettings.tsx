@@ -18,12 +18,21 @@ interface Props {
   allowed: Method[];
   /** Methods that move real money for this merchant (card only with Stripe). */
   liveMethods: readonly Method[];
+  /** Why card isn't live (Ajustes only), to point at the missing setting. */
+  cardStatus?: string;
   submitLabel: string;
   redirectTo: string;
 }
 
+const CARD_HINT: Record<string, string> = {
+  missing_key: "Para activar tarjeta en modo real falta STRIPE_SECRET_KEY en Vercel (Production).",
+  missing_webhook_secret: "Para activar tarjeta en modo real falta STRIPE_WEBHOOK_SECRET en Vercel (Production).",
+  missing_owner: "Para activar tarjeta en modo real falta AVEC_STRIPE_OWNER_EMAIL en Vercel (Production).",
+  not_owner: "Tarjeta en modo real está activada para otro correo (AVEC_STRIPE_OWNER_EMAIL no coincide con tu cuenta).",
+};
+
 /** Business profile, demo/real mode, currency, payment-method switches and tips. */
-export function MerchantSettings({ initial, allowed, liveMethods, submitLabel, redirectTo }: Props) {
+export function MerchantSettings({ initial, allowed, liveMethods, cardStatus, submitLabel, redirectTo }: Props) {
   const router = useRouter();
   const [v, setV] = useState(initial);
   const [busy, setBusy] = useState(false);
@@ -113,6 +122,9 @@ export function MerchantSettings({ initial, allowed, liveMethods, submitLabel, r
                 </span>
                 <input type="checkbox" className="h-6 w-6 accent-brand-ink" checked={v.enabled.includes(m)} onChange={() => toggle(m)} />
               </label>
+              {m === "card" && v.mode === "live" && cardStatus && cardStatus !== "ok" && (
+                <p className="mt-2 text-xs text-amber-700">{CARD_HINT[cardStatus] ?? cardStatus}</p>
+              )}
               {m === "zelle" && v.enabled.includes("zelle") && (
                 <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
                   <input className="input" inputMode="email" placeholder="Teléfono o correo de tu Zelle" value={v.zelleHandle} onChange={(e) => set("zelleHandle", e.target.value)} aria-label="Zelle" />
