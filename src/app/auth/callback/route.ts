@@ -3,9 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
-  const nextParam = req.nextUrl.searchParams.get("next") ?? "/dashboard";
+  const nextParam = req.nextUrl.searchParams.get("next") ?? "/cobrar";
   // Only allow same-site relative redirects.
-  const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/dashboard";
+  const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/cobrar";
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);

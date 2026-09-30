@@ -8,7 +8,7 @@ import type { T } from "@/lib/i18n";
 
 /** Only same-site paths, so the sign-in can't bounce people to another site. */
 function safeNext(raw: string | null): string {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/dashboard";
+  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/cobrar";
 }
 
 function friendlyError(message: string, t: T): string {
