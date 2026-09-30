@@ -5,7 +5,7 @@ import type { Lang, Tr } from "@/lib/i18n";
  * levels: the partner (Avec direct, or a bank's white-label, e.g. fiat-only)
  * and the merchant. A charge offers the intersection, fixed at creation.
  */
-export const METHODS = ["bank_transfer", "tigo_money", "card", "lightning", "usdt", "zelle"] as const;
+export const METHODS = ["card", "zelle", "venmo", "cashapp", "paypal", "bank_transfer", "tigo_money", "lightning", "usdt"] as const;
 export type Method = (typeof METHODS)[number];
 
 export interface MethodInfo {
@@ -30,9 +30,9 @@ const METHOD_TEXT: Record<Method, { kind: MethodInfo["kind"]; label: Tr; short: 
   },
   card: {
     kind: "fiat",
-    label: { es: "Tarjeta o Apple Pay", en: "Card or Apple Pay" },
+    label: { es: "Tarjeta, Apple Pay o Google Pay", en: "Card, Apple Pay or Google Pay" },
     short: { es: "Tarjeta", en: "Card" },
-    description: { es: "Débito, crédito o Apple Pay.", en: "Debit, credit or Apple Pay." },
+    description: { es: "Débito o crédito, con tu cuenta de Stripe.", en: "Debit or credit, through your Stripe account." },
   },
   lightning: {
     kind: "crypto",
@@ -50,8 +50,38 @@ const METHOD_TEXT: Record<Method, { kind: MethodInfo["kind"]; label: Tr; short: 
     kind: "fiat",
     label: { es: "Zelle", en: "Zelle" },
     short: { es: "Zelle", en: "Zelle" },
-    description: { es: "Desde la app de tu banco en EE. UU.", en: "From your US bank's app." },
+    description: { es: "Desde la app de tu banco en EE. UU. Sin comisión.", en: "From the customer's US bank app. No fees." },
   },
+  venmo: {
+    kind: "fiat",
+    label: { es: "Venmo", en: "Venmo" },
+    short: { es: "Venmo", en: "Venmo" },
+    description: { es: "A tu usuario de Venmo.", en: "To your Venmo username." },
+  },
+  cashapp: {
+    kind: "fiat",
+    label: { es: "Cash App", en: "Cash App" },
+    short: { es: "Cash App", en: "Cash App" },
+    description: { es: "A tu $cashtag.", en: "To your $cashtag." },
+  },
+  paypal: {
+    kind: "fiat",
+    label: { es: "PayPal", en: "PayPal" },
+    short: { es: "PayPal", en: "PayPal" },
+    description: { es: "A tu enlace paypal.me.", en: "To your paypal.me link." },
+  },
+};
+
+export const METHOD_ICON: Record<Method, string> = {
+  card: "💳",
+  zelle: "🏦",
+  venmo: "💙",
+  cashapp: "💚",
+  paypal: "🅿️",
+  bank_transfer: "🏦",
+  tigo_money: "📱",
+  lightning: "⚡",
+  usdt: "💵",
 };
 
 /** Names and descriptions of every method, in one language. */
@@ -66,10 +96,10 @@ export function methodInfo(lang: Lang): Record<Method, MethodInfo> {
 
 /**
  * Methods that can take real money today; the rest are demo-only for now.
- * Card / Apple Pay needs Stripe set up for this merchant.
+ * Card / Apple Pay needs the merchant's Stripe connected (or legacy owner mode).
  */
-export function liveMethods(stripe: boolean): readonly Method[] {
-  return stripe ? ["zelle", "card"] : ["zelle"];
+export function liveMethods(cardReady: boolean): readonly Method[] {
+  return cardReady ? ["card", "zelle", "venmo", "cashapp", "paypal"] : ["zelle", "venmo", "cashapp", "paypal"];
 }
 
 export function isMethod(v: unknown): v is Method {

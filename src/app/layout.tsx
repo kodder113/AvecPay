@@ -3,16 +3,18 @@ import Link from "next/link";
 import { SandboxBanner } from "@/components/SandboxBanner";
 import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Logo } from "@/components/Logo";
 import { HeaderWallet } from "@/components/wallet";
 import { getT } from "@/lib/i18n/server";
 import { LangProvider } from "@/components/i18n/LangProvider";
 import { LangToggle } from "@/components/i18n/LangToggle";
+import { MainNav, type NavItem } from "@/components/business/MainNav";
+import { isAdmin } from "@/lib/business/admin";
 
 export const metadata: Metadata = {
   title: "Avec Pay",
-  description:
-    "Send USDT, your recipient gets paid in local fiat via regulated off-ramp partners.",
+  description: "Get paid by QR: card, Apple Pay, Google Pay, Zelle, Venmo and Cash App, straight to your account.",
 };
 
 export const viewport: Viewport = {
@@ -21,11 +23,7 @@ export const viewport: Viewport = {
   themeColor: "#1B1E25",
 };
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,82 +31,50 @@ export default async function RootLayout({
   const sandbox = process.env.MOONPAY_ENV !== "production";
   const { lang, t } = await getT();
 
+  let items: NavItem[] = [];
+  if (user) {
+    const { data: member } = await createAdminClient().from("merchant_members").select("role").eq("user_id", user.id).eq("status", "active").maybeSingle();
+    const role = member?.role as string | undefined;
+    const lead = role === "owner" || role === "manager";
+    items = [
+      { href: "/cobrar", label: t({ es: "Cobrar", en: "Charge" }) },
+      ...(role ? [{ href: "/cobrar/panel", label: t({ es: "Panel", en: "Dashboard" }) }] : []),
+      ...(role ? [{ href: "/cobrar/historial", label: t({ es: "Historial", en: "History" }) }] : []),
+      ...(role ? [{ href: "/cobrar/qr", label: t({ es: "Mis QR", en: "QR codes" }) }] : []),
+      ...(lead ? [{ href: "/cobrar/equipo", label: t({ es: "Equipo", en: "Team" }) }] : []),
+      ...(role === "owner" ? [{ href: "/cobrar/plan", label: t({ es: "Plan", en: "Plan" }) }] : []),
+      ...(role === "owner" ? [{ href: "/cobrar/ajustes", label: t({ es: "Ajustes", en: "Settings" }) }] : []),
+      { href: "/escanear", label: t({ es: "Pagar QR", en: "Pay a QR" }), divider: true },
+      { href: "/banco-demo", label: t({ es: "Banco Demo", en: "Demo Bank" }) },
+      { href: "/dashboard", label: "USDT", divider: true },
+      ...(isAdmin(user.email) ? [{ href: "/admin", label: "Admin" }] : []),
+    ];
+  }
+
   return (
     <html lang={lang}>
       <body>
         <LangProvider lang={lang}>
           {sandbox && <SandboxBanner />}
-          <header className="bg-brand-ink">
+          <header className="bg-brand-ink print:hidden">
             <nav className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
-              <Link href={user ? "/dashboard" : "/"} aria-label="Avec Pay home">
+              <Link href={user ? "/cobrar" : "/"} aria-label="Avec Pay home">
                 <Logo size={28} />
               </Link>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <LangToggle />
                 {user ? (
                   <HeaderWallet />
                 ) : (
-                  <Link
-                    href="/login"
-                    className="text-sm font-semibold text-brand-yellow"
-                  >
+                  <Link href="/login" className="text-sm font-semibold text-brand-yellow">
                     {t({ es: "Entrar", en: "Sign in" })}
                   </Link>
                 )}
               </div>
             </nav>
-            {user && (
-              <div className="mx-auto flex max-w-3xl items-center gap-5 overflow-x-auto whitespace-nowrap px-4 pb-3 text-sm font-medium">
-                <Link
-                  href="/cobrar"
-                  className="font-semibold text-brand-yellow"
-                >
-                  {t({ es: "Cobrar", en: "Charge" })}
-                </Link>
-                <Link
-                  href="/escanear"
-                  className="text-slate-200 hover:text-brand-yellow"
-                >
-                  {t({ es: "Pagar QR", en: "Pay QR" })}
-                </Link>
-                <Link
-                  href="/banco-demo"
-                  className="text-slate-200 hover:text-brand-yellow"
-                >
-                  {t({ es: "Banco Demo", en: "Demo Bank" })}
-                </Link>
-                <span className="h-4 w-px bg-white/20" />
-                <Link
-                  href="/dashboard"
-                  className="text-slate-200 hover:text-brand-yellow"
-                >
-                  {t({ es: "Envíos", en: "Transfers" })}
-                </Link>
-                <Link
-                  href="/send"
-                  className="text-slate-200 hover:text-brand-yellow"
-                >
-                  {t({ es: "Enviar", en: "Send" })}
-                </Link>
-                <Link
-                  href="/recipients"
-                  className="text-slate-200 hover:text-brand-yellow"
-                >
-                  {t({ es: "Destinatarios", en: "Recipients" })}
-                </Link>
-                <form
-                  action="/auth/signout"
-                  method="post"
-                  className="ml-auto pl-2"
-                >
-                  <button className="text-slate-400 hover:text-white">
-                    {t({ es: "Salir", en: "Sign out" })}
-                  </button>
-                </form>
-              </div>
-            )}
+            {user && <MainNav items={items} signOut={t({ es: "Salir", en: "Sign out" })} />}
           </header>
-          <main className="mx-auto max-w-3xl px-4 py-6">{children}</main>
+          <main className="mx-auto max-w-3xl px-4 py-6 print:max-w-none print:p-0">{children}</main>
         </LangProvider>
       </body>
     </html>

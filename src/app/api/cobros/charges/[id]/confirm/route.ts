@@ -1,34 +1,34 @@
 import { NextResponse } from "next/server";
-import { getT } from "@/lib/i18n/server";
 import { z } from "zod";
-import { requireUser } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireBusiness } from "@/lib/business/context";
+import { visibleCharge } from "@/lib/business/visibility";
 import { jsonError } from "@/lib/http";
 
 const body = z.object({ received: z.boolean() });
 
 /**
- * Merchant confirms a real payment after seeing it in their bank app
- * ("Recibido"), or sends a reported one back to waiting ("No llegó").
+ * A team member confirms a payment sent from the customer's app (Zelle,
+ * Venmo, Cash App, PayPal) after seeing it arrive ("Received"), or sends a
+ * reported one back to waiting ("Didn't arrive").
  */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { t } = await getT();
   const { id } = await params;
-  const { supabase, user } = await requireUser();
-  if (!user) return jsonError(401, t({ es: "Inicia sesión", en: "Sign in" }));
+  const g = await requireBusiness();
+  if (!g.ok) return g.res;
+  const { db, t, user, business } = g.ctx;
   const parsed = body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return jsonError(400, t({ es: "Datos inválidos", en: "Invalid data" }));
 
-  // RLS: only the merchant who owns the charge can see it.
-  const { data: charge } = await supabase.from("charges").select("id, mode").eq("id", id).maybeSingle();
+  const charge = await visibleCharge<{ id: string; mode: string; paid_method: string | null; allowed_methods: string[] }>(db, business, user.id, id, "id, mode, paid_method, allowed_methods");
   if (!charge) return jsonError(404, t({ es: "Cobro no encontrado", en: "Charge not found" }));
   if (charge.mode !== "live") return jsonError(400, t({ es: "Los cobros de prueba se confirman solos", en: "Test charges confirm on their own" }));
 
-  const db = createAdminClient();
+  // Marked received without a customer report: record the first app method offered.
+  const fallback = charge.allowed_methods.find((mm) => mm !== "card") ?? "zelle";
   const result = parsed.data.received
     ? await db
         .from("charges")
-        .update({ status: "paid", paid_at: new Date().toISOString(), paid_method: "zelle", paid_reference: null })
+        .update({ status: "paid", paid_at: new Date().toISOString(), paid_method: charge.paid_method ?? fallback, paid_reference: null })
         .eq("id", id)
         .in("status", ["pending", "reported"])
         .select("id")

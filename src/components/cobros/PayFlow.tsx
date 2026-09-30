@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { methodInfo, type Method } from "@/lib/cobros/methods";
+import { methodInfo, type Method, METHOD_ICON } from "@/lib/cobros/methods";
 import { formatMoney } from "@/lib/cobros/parse";
 import { addMoney } from "@/lib/cobros/tip";
 import { TipPicker } from "./TipPicker";
@@ -17,7 +17,6 @@ interface Props {
   tipsAllowed: boolean;
 }
 
-const ICON: Record<Method, string> = { bank_transfer: "🏦", tigo_money: "📱", card: "💳", lightning: "⚡", usdt: "💵", zelle: "🇺🇸" };
 
 /** Customer flow: pick a method, see its (simulated) screen, pay from Banco Demo. */
 export function PayFlow({ code, amount, currency, businessName, methods, demoAccount, tipsAllowed }: Props) {
@@ -89,7 +88,7 @@ export function PayFlow({ code, amount, currency, businessName, methods, demoAcc
               onClick={() => setMethod(m)}
               className={`flex items-center gap-3 rounded-xl border-2 p-3 text-left ${method === m ? "border-brand-ink bg-slate-50" : "border-slate-200"}`}
             >
-              <span className="text-2xl">{ICON[m]}</span>
+              <span className="text-2xl">{METHOD_ICON[m]}</span>
               <span>
                 <span className="block font-medium">{info[m].label}</span>
                 <span className="block text-xs text-slate-500">{info[m].description}</span>

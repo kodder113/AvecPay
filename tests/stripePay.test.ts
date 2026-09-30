@@ -27,6 +27,7 @@ describe("settleFromSession", () => {
         payer_name: "Wilmer",
         paid_at: "2026-09-30T12:00:00.000Z",
         stripe_session_id: "cs_test_1",
+        platform_fee: 0,
       },
     });
   });

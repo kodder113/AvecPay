@@ -5,6 +5,9 @@ import { ModePill } from "@/components/cobros/DemoPill";
 import { LivePayFlow } from "@/components/cobros/LivePayFlow";
 import { formatMoney } from "@/lib/cobros/parse";
 import { isMethod } from "@/lib/cobros/methods";
+import { HANDLE_METHODS, isHandleMethod } from "@/lib/cobros/handles";
+import { accessState, type BillingFields } from "@/lib/business/access";
+import type { PayApp } from "@/components/cobros/LivePayFlow";
 import { getT } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +29,9 @@ export default async function PagarPage({
   const { data: charge } = valid
     ? await createAdminClient()
         .from("charges")
-        .select("code, mode, status, amount, currency, description, allowed_methods, tips_allowed, expires_at, merchant_id, merchants(business_name)")
+        .select(
+          "code, mode, status, amount, currency, description, allowed_methods, tips_allowed, tip_only, ticket_ref, customer_name, expires_at, merchant_id, merchants(business_name, plan, subscription_status, access_until, past_due_since)",
+        )
         .eq("code", code)
         .maybeSingle()
     : { data: null };
@@ -35,21 +40,21 @@ export default async function PagarPage({
     return <p className="card text-slate-700">{t({ es: "Este cobro no existe. Revisa el QR o pide uno nuevo.", en: "This charge doesn't exist. Check the QR or ask for a new one." })}</p>;
   }
 
-  const merchant = (Array.isArray(charge.merchants) ? charge.merchants[0] : charge.merchants) as { business_name: string } | null;
-  const businessName = merchant?.business_name ?? t({ es: "Comercio", en: "Merchant" });
+  const merchant = (Array.isArray(charge.merchants) ? charge.merchants[0] : charge.merchants) as (BillingFields & { business_name: string }) | null;
+  const businessName = merchant?.business_name ?? t({ es: "Negocio", en: "Business" });
   const expired = new Date(charge.expires_at) < new Date();
+  const open = merchant ? accessState(merchant).ok : false;
 
   const live = charge.mode === "live";
-  let zelle: { handle: string; name: string } | null = null;
-  if (live && (charge.allowed_methods as string[]).includes("zelle")) {
-    const { data: m } = await createAdminClient()
-      .from("merchant_methods")
-      .select("details")
-      .eq("merchant_id", charge.merchant_id)
-      .eq("method", "zelle")
-      .maybeSingle();
-    const d = (m?.details ?? {}) as { handle?: string; name?: string };
-    if (d.handle) zelle = { handle: d.handle, name: d.name || businessName };
+  const offered = charge.allowed_methods as string[];
+  const apps: PayApp[] = [];
+  if (live && offered.some(isHandleMethod)) {
+    const { data: rows } = await createAdminClient().from("merchant_methods").select("method, details").eq("merchant_id", charge.merchant_id).in("method", [...HANDLE_METHODS]);
+    for (const method of HANDLE_METHODS) {
+      if (!offered.includes(method)) continue;
+      const d = (rows?.find((r) => r.method === method)?.details ?? {}) as { handle?: string; name?: string };
+      if (d.handle) apps.push({ method, handle: d.handle, name: method === "zelle" ? d.name || businessName : undefined });
+    }
   }
 
   const supabase = await createClient();
@@ -68,6 +73,13 @@ export default async function PagarPage({
         <ModePill mode={charge.mode} />
         <p className="pt-2 text-sm text-slate-500">{t({ es: "Pagar a", en: "Pay" })}</p>
         <h1 className="text-2xl font-bold">{businessName}</h1>
+        {charge.ticket_ref && (
+          <p className="text-sm font-semibold text-slate-700">
+            {t({ es: "Ticket", en: "Ticket" })} #{charge.ticket_ref}
+            {charge.customer_name && <> · {charge.customer_name}</>}
+          </p>
+        )}
+        {charge.tip_only && <p className="text-sm font-semibold text-emerald-700">{t({ es: "Propina 💛", en: "Tip 💛" })}</p>}
         <p className="text-4xl font-black">{formatMoney(charge.amount, charge.currency)}</p>
         {charge.description && <p className="text-sm text-slate-600">{charge.description}</p>}
       </div>
@@ -86,6 +98,8 @@ export default async function PagarPage({
         )
       ) : charge.status === "cancelled" ? (
         <p className="card text-center text-slate-700">{t({ es: "El comercio canceló este cobro.", en: "The merchant canceled this charge." })}</p>
+      ) : !open ? (
+        <p className="card text-center text-slate-700">{t({ es: "Este negocio no está aceptando pagos ahora.", en: "This business isn't accepting payments right now." })}</p>
       ) : expired ? (
         <p className="card text-center text-slate-700">{t({ es: "Este cobro venció. Pide un nuevo QR.", en: "This charge has expired. Ask for a new QR." })}</p>
       ) : live ? (
@@ -95,7 +109,7 @@ export default async function PagarPage({
           currency={charge.currency}
           businessName={businessName}
           tipsAllowed={charge.tips_allowed}
-          zelle={zelle}
+          apps={apps}
           card={(charge.allowed_methods as string[]).includes("card")}
           returned={returnedFromCard}
         />

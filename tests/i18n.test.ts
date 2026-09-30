@@ -20,8 +20,8 @@ describe("translations", () => {
     expect(translator("en")({ es: "Cobrar", en: "Charge" })).toBe("Charge");
   });
   it("method names and pay errors exist in both languages", () => {
-    expect(methodInfo("en").card.label).toBe("Card or Apple Pay");
-    expect(methodInfo("es").card.label).toBe("Tarjeta o Apple Pay");
+    expect(methodInfo("en").card.label).toBe("Card, Apple Pay or Google Pay");
+    expect(methodInfo("es").card.label).toBe("Tarjeta, Apple Pay o Google Pay");
     expect(payErrorMessage("ERROR: charge_expired", "en")).toMatch(/expired/);
     expect(payErrorMessage("ERROR: charge_expired", "es")).toMatch(/venció/);
   });

@@ -12,6 +12,11 @@ export interface ChargeView {
   code: string;
   status: "pending" | "reported" | "paid" | "cancelled";
   mode?: string;
+  kind?: "quick" | "ticket" | "link";
+  ticket_ref?: string | null;
+  customer_name?: string | null;
+  customer_email?: string | null;
+  tip_only?: boolean;
   reported_at?: string | null;
   amount: number | string;
   tip_amount?: number | string | null;
@@ -120,7 +125,7 @@ export function ChargeLive({ initial, businessName }: { initial: ChargeView; bus
                     es: "Cobrado por Stripe. Llega a tu banco con el próximo depósito de Stripe. Avec no toca el dinero.",
                     en: "Charged through Stripe. It reaches your bank with Stripe’s next payout. Avec never touches the money.",
                   })
-                : t({ es: "Confirmado por ti al verlo en tu banco. Avec no toca el dinero.", en: "Confirmed by you after seeing it in your bank. Avec never touches the money." })}
+                : t({ es: "Confirmado por tu equipo al verlo llegar. Avec no toca el dinero.", en: "Confirmed by your team when it arrived. Avec never touches the money." })}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -147,9 +152,10 @@ export function ChargeLive({ initial, businessName }: { initial: ChargeView; bus
             </p>
           )}
           <p className="text-slate-700">
-            {t({ es: "por Zelle · de", en: "via Zelle · from" })} <b>{charge.payer_name ?? t({ es: "Cliente", en: "Customer" })}</b> · {t({ es: "nota", en: "memo" })} <span className="font-mono">{charge.code}</span>
+            {isMethod(charge.paid_method) && <>{t({ es: "por", en: "via" })} {methodInfo(lang)[charge.paid_method].label} · </>}
+            {t({ es: "de", en: "from" })} <b>{charge.payer_name ?? t({ es: "Cliente", en: "Customer" })}</b> · {t({ es: "nota", en: "note" })} <span className="font-mono">{charge.code}</span>
           </p>
-          <p className="text-sm text-slate-600">{t({ es: "Abre la app de tu banco y confirma que llegó antes de entregar.", en: "Open your bank app and confirm it arrived before handing anything over." })}</p>
+          <p className="text-sm text-slate-600">{t({ es: "Abre tu banco o la app de pago y confirma que llegó antes de entregar.", en: "Open your bank or payment app and confirm it arrived before handing anything over." })}</p>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <button type="button" className="btn-primary" disabled={confirming} onClick={() => confirm(true)}>✓ {t({ es: "Recibido", en: "Received" })}</button>
@@ -163,6 +169,13 @@ export function ChargeLive({ initial, businessName }: { initial: ChargeView; bus
     <div className="space-y-4">
       <div className="card space-y-3 text-center">
         <p className="text-sm font-medium text-slate-500">{businessName}</p>
+        {charge.ticket_ref && (
+          <p className="text-sm font-semibold text-slate-700">
+            {t({ es: "Ticket", en: "Ticket" })} #{charge.ticket_ref}
+            {charge.customer_name && <> · {charge.customer_name}</>}
+          </p>
+        )}
+        {charge.tip_only && <p className="text-sm font-semibold text-emerald-700">{t({ es: "Propina", en: "Tip" })}</p>}
         <p className="text-4xl font-black">{formatMoney(charge.amount, charge.currency)}</p>
         {charge.description && <p className="text-sm text-slate-600">{charge.description}</p>}
         <div className={`mx-auto w-full max-w-xs ${waiting ? "" : "opacity-30"}`}>
@@ -201,7 +214,7 @@ export function ChargeLive({ initial, businessName }: { initial: ChargeView; bus
           </button>
           {live && (
             <button type="button" className="col-span-2 text-sm text-brand-ink underline" onClick={() => confirm(true)} disabled={confirming}>
-              {t({ es: "Ya lo vi en mi banco: marcar como recibido", en: "I see it in my bank: mark as received" })}
+              {t({ es: "Ya lo recibí en mi banco o app: marcar como pagado", en: "I received it in my bank or app: mark as paid" })}
             </button>
           )}
           <button type="button" className="col-span-2 text-sm text-slate-500 underline" onClick={cancel} disabled={cancelling}>

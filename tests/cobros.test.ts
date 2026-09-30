@@ -6,11 +6,11 @@ import { generateChargeCode } from "@/lib/cobros/code";
 describe("resolveMethods", () => {
   it("offers only what both the partner and the merchant allow, in catalog order", () => {
     const bankPartner = ["bank_transfer", "card", "tigo_money"]; // fiat-only white-label
-    expect(resolveMethods(bankPartner, ["lightning", "card", "bank_transfer"])).toEqual(["bank_transfer", "card"]);
+    expect(resolveMethods(bankPartner, ["lightning", "card", "bank_transfer"])).toEqual(["card", "bank_transfer"]);
     expect(resolveMethods(bankPartner, ["usdt", "lightning"])).toEqual([]);
   });
   it("ignores unknown methods", () => {
-    expect(resolveMethods(["bank_transfer", "paypal"], ["paypal", "bank_transfer"])).toEqual(["bank_transfer"]);
+    expect(resolveMethods(["bank_transfer", "wire"], ["wire", "bank_transfer"])).toEqual(["bank_transfer"]);
   });
 });
 

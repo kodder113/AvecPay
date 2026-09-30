@@ -19,7 +19,19 @@ export interface ChargeForStripe {
 }
 
 export type StripeOutcome =
-  | { ok: true; update: { status: "paid"; paid_method: "card"; tip_amount: number; paid_reference: string; payer_name: string; paid_at: string; stripe_session_id: string } }
+  | {
+      ok: true;
+      update: {
+        status: "paid";
+        paid_method: "card";
+        tip_amount: number;
+        paid_reference: string;
+        payer_name: string;
+        paid_at: string;
+        stripe_session_id: string;
+        platform_fee: number;
+      };
+    }
   | { ok: false; reason: string };
 
 /**
@@ -45,6 +57,7 @@ export function settleFromSession(session: StripeSession, charge: ChargeForStrip
       payer_name: session.customer_details?.name?.trim().slice(0, 60) || "Cliente",
       paid_at: now.toISOString(),
       stripe_session_id: session.id,
+      platform_fee: Math.max(0, Number(session.metadata?.fee_cents ?? "0") || 0) / 100,
     },
   };
 }

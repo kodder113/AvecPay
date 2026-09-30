@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createCheckoutSession, toCents } from "@/lib/stripe";
+import { applicationFeeCents, createCheckoutSession, toCents } from "@/lib/stripe";
+import { accessState, type BillingFields } from "@/lib/business/access";
 import { jsonError } from "@/lib/http";
 import { getT } from "@/lib/i18n/server";
 
@@ -24,7 +25,9 @@ export async function POST(req: Request) {
   const db = createAdminClient();
   const { data: charge } = await db
     .from("charges")
-    .select("id, code, mode, status, amount, currency, allowed_methods, tips_allowed, expires_at, merchants(business_name)")
+    .select(
+      "id, code, mode, status, amount, currency, allowed_methods, tips_allowed, tip_only, expires_at, merchants(business_name, stripe_account_id, stripe_charges_enabled, plan, subscription_status, access_until, past_due_since)",
+    )
     .eq("code", parsed.data.code.toUpperCase())
     .maybeSingle();
   if (!charge) return jsonError(404, t({ es: "Este cobro no existe", en: "This charge doesn't exist" }));
@@ -41,8 +44,17 @@ export async function POST(req: Request) {
     return jsonError(400, t({ es: "Propina inválida", en: "Invalid tip" }));
   }
 
-  const merchant = (Array.isArray(charge.merchants) ? charge.merchants[0] : charge.merchants) as { business_name: string } | null;
+  const merchant = (Array.isArray(charge.merchants) ? charge.merchants[0] : charge.merchants) as
+    | (BillingFields & { business_name: string; stripe_account_id: string | null; stripe_charges_enabled: boolean })
+    | null;
+  if (!merchant || !accessState(merchant).ok) return jsonError(409, t({ es: "Este negocio no está aceptando pagos ahora.", en: "This business isn't accepting payments right now." }));
+  // The merchant's own Stripe account gets the money; Avec takes its fee (never on tips).
+  const account = merchant.stripe_account_id && merchant.stripe_charges_enabled ? merchant.stripe_account_id : null;
+  const feeCents = account && !charge.tip_only ? applicationFeeCents(amountCents) : 0;
   const origin = new URL(req.url).origin;
+  const now = Math.floor(Date.now() / 1000);
+  // Tickets stay open for days, but a Stripe page lasts 30 minutes to 24 hours.
+  const expiresAt = Math.min(now + 24 * 3600 - 60, Math.max(now + 31 * 60, Math.floor(new Date(charge.expires_at).getTime() / 1000)));
   try {
     const session = await createCheckoutSession({
       amountCents: amountCents + tipCents,
@@ -52,8 +64,9 @@ export async function POST(req: Request) {
       tipCents,
       successUrl: `${origin}/pagar/${charge.code}?pagado=1`,
       cancelUrl: `${origin}/pagar/${charge.code}`,
-      // Don't leave a card page open for hours after the QR is gone.
-      expiresAt: Math.floor(Date.now() / 1000) + 31 * 60,
+      expiresAt,
+      account,
+      applicationFeeCents: feeCents,
     });
     await db.from("charges").update({ stripe_session_id: session.id }).eq("id", charge.id).eq("status", "pending");
     return NextResponse.json({ url: session.url });
