@@ -87,7 +87,8 @@ export async function loadBusiness(): Promise<Ctx> {
       .maybeSingle();
     if (invite) {
       await db.from("merchant_members").update({ user_id: user.id, status: "active" }).eq("id", invite.id).is("user_id", null);
-      business = await findMembership(db, user.id);
+      // A different query than the first lookup: Next.js memoizes identical GETs within one render.
+      business = await findMembership(db, user.id, invite.id);
     }
   }
 
@@ -102,13 +103,10 @@ export async function loadBusiness(): Promise<Ctx> {
   return { user, business, db, lang, t, admin: isAdmin(user.email) };
 }
 
-async function findMembership(db: Db, userId: string): Promise<Business | null> {
-  const { data } = await db
-    .from("merchant_members")
-    .select(`role, merchants (${MERCHANT_COLUMNS})`)
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .maybeSingle();
+async function findMembership(db: Db, userId: string, memberId?: string): Promise<Business | null> {
+  let q = db.from("merchant_members").select(`role, merchants (${MERCHANT_COLUMNS})`).eq("user_id", userId).eq("status", "active");
+  if (memberId) q = q.eq("id", memberId);
+  const { data } = await q.maybeSingle();
   if (!data?.merchants) return null;
   const merchant = (Array.isArray(data.merchants) ? data.merchants[0] : data.merchants) as MerchantRow;
   if (!isPlanId(merchant.plan)) merchant.plan = null;
@@ -138,7 +136,8 @@ async function checkStarterDevice(db: Db, user: User, business: Business, token:
   const mine = rows?.find((r) => r.session_id === sessionId);
   const now = new Date();
   const dayAgo = now.getTime() - 86_400_000;
-  const sharing = (rows ?? []).filter((r) => new Date(r.first_seen).getTime() > dayAgo).length >= 3;
+  // Distinct sign-ins in the last day, counting this one if it's new.
+  const sharing = (rows ?? []).filter((r) => new Date(r.first_seen).getTime() > dayAgo).length + (mine ? 0 : 1) >= 3;
 
   if (mine) {
     if (mine.superseded_at) return { blocked: true, sharing };

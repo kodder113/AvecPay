@@ -48,6 +48,7 @@ describe("formatting and errors", () => {
 describe("formatDateTime", () => {
   it("shows Honduras time regardless of the server's zone", () => {
     // 23:20 UTC is 17:20 in Tegucigalpa (UTC-6, no DST)
-    expect(formatDateTime("2026-09-29T23:20:00Z")).toMatch(/5:20/);
+    expect(formatDateTime("2026-09-29T23:20:00Z", "es", "America/Tegucigalpa")).toMatch(/5:20/);
+    expect(formatDateTime("2026-09-29T23:20:00Z", "en", "America/New_York")).toMatch(/7:20/);
   });
 });

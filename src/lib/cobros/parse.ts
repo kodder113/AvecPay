@@ -18,8 +18,11 @@ export function formatMoney(amount: number | string, currency = "HNL"): string {
   return `${symbol} ${n.toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-// Honduras time everywhere; servers render in UTC otherwise.
-export function formatDateTime(iso: string, lang: Lang = "es", timeZone = "America/Tegucigalpa"): string {
+// One business time zone (US Eastern unless NEXT_PUBLIC_AVEC_TIMEZONE says otherwise);
+// servers would render in UTC otherwise.
+export const BUSINESS_TZ = process.env.NEXT_PUBLIC_AVEC_TIMEZONE ?? "America/New_York";
+
+export function formatDateTime(iso: string, lang: Lang = "es", timeZone = BUSINESS_TZ): string {
   return new Date(iso).toLocaleString(localeFor(lang), { dateStyle: "medium", timeStyle: "short", timeZone });
 }
 

@@ -33,8 +33,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   let items: NavItem[] = [];
   if (user) {
-    const { data: member } = await createAdminClient().from("merchant_members").select("role").eq("user_id", user.id).eq("status", "active").maybeSingle();
-    const role = member?.role as string | undefined;
+    const admin = createAdminClient();
+    const { data: member } = await admin.from("merchant_members").select("role").eq("user_id", user.id).eq("status", "active").maybeSingle();
+    // First sign-in of an invited team member: the page accepts the invite in the same request.
+    const { data: invite } =
+      member || !user.email ? { data: null } : await admin.from("merchant_members").select("role").eq("email", user.email.toLowerCase()).eq("status", "invited").limit(1).maybeSingle();
+    const role = (member?.role ?? invite?.role) as string | undefined;
     const lead = role === "owner" || role === "manager";
     items = [
       { href: "/cobrar", label: t({ es: "Cobrar", en: "Charge" }) },

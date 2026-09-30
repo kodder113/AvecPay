@@ -217,6 +217,7 @@ export function ChargeLive({ initial, businessName }: { initial: ChargeView; bus
               {t({ es: "Ya lo recibí en mi banco o app: marcar como pagado", en: "I received it in my bank or app: mark as paid" })}
             </button>
           )}
+          {charge.customer_email && <EmailLink id={charge.id} email={charge.customer_email} />}
           <button type="button" className="col-span-2 text-sm text-slate-500 underline" onClick={cancel} disabled={cancelling}>
             {t({ es: "Cancelar cobro", en: "Cancel charge" })}
           </button>
@@ -225,5 +226,31 @@ export function ChargeLive({ initial, businessName }: { initial: ChargeView; bus
         <Link href="/cobrar" className="btn-primary w-full">{t({ es: "Nuevo cobro", en: "New charge" })}</Link>
       )}
     </div>
+  );
+}
+
+/** Tickets: email the customer the pay link (Business plan; the API says if not). */
+function EmailLink({ id, email }: { id: string; email: string }) {
+  const t = useT();
+  const [state, setState] = useState<"idle" | "busy" | "sent" | string>("idle");
+  return (
+    <button
+      type="button"
+      className="col-span-2 text-sm text-brand-ink underline disabled:no-underline disabled:opacity-60"
+      disabled={state === "busy" || state === "sent"}
+      onClick={async () => {
+        setState("busy");
+        const res = await fetch(`/api/cobros/charges/${id}/remind`, { method: "POST" });
+        setState(res.ok ? "sent" : ((await res.json().catch(() => ({}))).error ?? "Error"));
+      }}
+    >
+      {state === "sent"
+        ? t({ es: `Enlace enviado a ${email} ✓`, en: `Link sent to ${email} ✓` })
+        : state === "busy"
+          ? "…"
+          : state !== "idle"
+            ? state
+            : t({ es: `Enviar el enlace de pago a ${email}`, en: `Email the pay link to ${email}` })}
+    </button>
   );
 }
