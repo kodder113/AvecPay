@@ -3,11 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { ChargeForm } from "@/components/cobros/ChargeForm";
 import { MerchantSettings } from "@/components/cobros/MerchantSettings";
 import { DemoPill, ModePill } from "@/components/cobros/DemoPill";
+import { DbError } from "@/components/cobros/DbError";
 import { METHODS, resolveMethods } from "@/lib/cobros/methods";
 
 export default async function CobrarPage() {
   const supabase = await createClient();
-  const { data: merchant } = await supabase.from("merchants").select("business_name, currency, mode").maybeSingle();
+  const { data: merchant, error } = await supabase.from("merchants").select("business_name, currency, mode").maybeSingle();
+  if (error) return <DbError message={error.message} />;
 
   if (!merchant) {
     const { data: partner } = await supabase.from("partners").select("allowed_methods").eq("id", "avec").single();

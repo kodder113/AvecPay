@@ -1,14 +1,16 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { DbError } from "@/components/cobros/DbError";
 import { MerchantSettings } from "@/components/cobros/MerchantSettings";
 import { resolveMethods, type Method } from "@/lib/cobros/methods";
 
 export default async function AjustesPage() {
   const supabase = await createClient();
-  const { data: merchant } = await supabase
+  const { data: merchant, error } = await supabase
     .from("merchants")
     .select("business_name, partner_id, tips_enabled, mode, currency, merchant_methods(method, enabled, details)")
     .maybeSingle();
+  if (error) return <DbError message={error.message} />;
   if (!merchant) redirect("/cobrar");
   const { data: partner } = await supabase.from("partners").select("allowed_methods").eq("id", merchant.partner_id).single();
   const allowed = resolveMethods(partner?.allowed_methods ?? [], partner?.allowed_methods ?? []);
