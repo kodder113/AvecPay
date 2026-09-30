@@ -32,6 +32,7 @@ export function payErrorMessage(raw: string): string {
     method_not_allowed: "Este comercio no acepta ese método de pago.",
     cannot_pay_own_charge: "No puedes pagar tu propio cobro. Pídele a otra persona que lo escanee.",
     insufficient_funds: "Saldo insuficiente en Banco Demo. Recárgalo en la sección Banco Demo.",
+    invalid_tip: "La propina no es válida (máximo el 100% del monto).",
   };
   const key = Object.keys(codes).find((k) => raw.includes(k));
   return key ? codes[key] : "No se pudo completar el pago. Intenta de nuevo.";

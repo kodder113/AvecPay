@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { METHOD_INFO, type Method } from "@/lib/cobros/methods";
 import { formatMoney } from "@/lib/cobros/parse";
+import { TIP_PERCENTS, addMoney, parseTip, tipForPercent } from "@/lib/cobros/tip";
 
 interface Props {
   code: string;
@@ -11,17 +12,24 @@ interface Props {
   businessName: string;
   methods: Method[];
   demoAccount: { account_number: string; balance: number | string } | null;
+  tipsAllowed: boolean;
 }
 
 const ICON: Record<Method, string> = { bank_transfer: "🏦", tigo_money: "📱", card: "💳", lightning: "⚡", usdt: "💵" };
 
 /** Customer flow: pick a method, see its (simulated) screen, pay from Banco Demo. */
-export function PayFlow({ code, amount, currency, businessName, methods, demoAccount }: Props) {
+export function PayFlow({ code, amount, currency, businessName, methods, demoAccount, tipsAllowed }: Props) {
   const [method, setMethod] = useState<Method | null>(methods.length === 1 ? methods[0] : null);
   const [stage, setStage] = useState<"choose" | "processing" | "done">("choose");
   const [error, setError] = useState<string | null>(null);
   const [reference, setReference] = useState<string | null>(null);
-  const money = formatMoney(amount, currency);
+  // Tip: a suggested percentage, a typed amount ("custom"), or none.
+  const [tipChoice, setTipChoice] = useState<number | "custom" | null>(null);
+  const [customTip, setCustomTip] = useState("");
+  const tip =
+    !tipsAllowed || tipChoice === null ? 0 : tipChoice === "custom" ? parseTip(customTip, amount) : tipForPercent(amount, tipChoice);
+  const total = addMoney(amount, tip ?? 0);
+  const money = formatMoney(total, currency);
 
   async function pay() {
     if (!method) return;
@@ -32,7 +40,7 @@ export function PayFlow({ code, amount, currency, businessName, methods, demoAcc
       fetch("/api/cobros/pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, method }),
+        body: JSON.stringify({ code, method, tip: tip ?? 0 }),
       }),
       new Promise((r) => setTimeout(r, 1800)),
     ]);
@@ -51,6 +59,7 @@ export function PayFlow({ code, amount, currency, businessName, methods, demoAcc
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-4xl text-white">✓</div>
         <p className="text-sm font-semibold uppercase tracking-wide text-emerald-800">Pago enviado</p>
         <p className="text-3xl font-black">{money}</p>
+        {tip ? <p className="text-sm text-slate-600">incluye propina de {formatMoney(tip, currency)} · ¡gracias!</p> : null}
         <p className="text-slate-700">a <b>{businessName}</b></p>
         <p className="text-sm text-slate-600">Referencia <span className="font-mono font-semibold">{reference}</span></p>
         <Link href="/banco-demo" className="btn-secondary w-full">Ver mi Banco Demo</Link>
@@ -90,13 +99,45 @@ export function PayFlow({ code, amount, currency, businessName, methods, demoAcc
         </div>
       </div>
 
+      {tipsAllowed && (
+        <div className="card space-y-3">
+          <h2 className="font-semibold">¿Agregar propina?</h2>
+          <div className="grid grid-cols-5 gap-2">
+            <TipButton active={tipChoice === null} onClick={() => setTipChoice(null)} label="No" />
+            {TIP_PERCENTS.map((p) => (
+              <TipButton key={p} active={tipChoice === p} onClick={() => setTipChoice(p)} label={`${p}%`} sub={formatMoney(tipForPercent(amount, p), currency)} />
+            ))}
+            <TipButton active={tipChoice === "custom"} onClick={() => setTipChoice("custom")} label="Otro" />
+          </div>
+          {tipChoice === "custom" && (
+            <div className="space-y-1">
+              <input
+                className="input"
+                inputMode="decimal"
+                autoFocus
+                placeholder="Monto de propina, ej. 30"
+                value={customTip}
+                onChange={(e) => setCustomTip(e.target.value.replace(/[^0-9.,]/g, ""))}
+                aria-label="Propina"
+              />
+              {tip === null && <p className="text-xs text-red-600">Escribe un monto válido, hasta {formatMoney(amount, currency)}.</p>}
+            </div>
+          )}
+          <dl className="space-y-1 border-t border-slate-100 pt-3 text-sm">
+            <div className="flex justify-between"><dt className="text-slate-500">Subtotal</dt><dd>{formatMoney(amount, currency)}</dd></div>
+            <div className="flex justify-between"><dt className="text-slate-500">Propina</dt><dd>{formatMoney(tip ?? 0, currency)}</dd></div>
+            <div className="flex justify-between text-base font-bold"><dt>Total</dt><dd>{money}</dd></div>
+          </dl>
+        </div>
+      )}
+
       {method && <MethodScreen method={method} money={money} businessName={businessName} code={code} account={demoAccount?.account_number ?? null} />}
 
       {error && <p className="card border-red-200 bg-red-50 text-sm text-red-700">{error}</p>}
 
       {demoAccount ? (
         <div className="space-y-2">
-          <button type="button" className="btn-primary w-full py-4 text-base" disabled={!method} onClick={pay}>
+          <button type="button" className="btn-primary w-full py-4 text-base" disabled={!method || tip === null} onClick={pay}>
             Pagar {money}
           </button>
           <p className="text-center text-xs text-slate-500">
@@ -109,6 +150,19 @@ export function PayFlow({ code, amount, currency, businessName, methods, demoAcc
         </Link>
       )}
     </div>
+  );
+}
+
+function TipButton({ active, onClick, label, sub }: { active: boolean; onClick: () => void; label: string; sub?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex flex-col items-center justify-center rounded-xl border-2 px-1 py-2 text-sm font-semibold ${active ? "border-brand-ink bg-brand-yellow" : "border-slate-200"}`}
+    >
+      {label}
+      {sub && <span className="text-[10px] font-normal text-slate-600">{sub}</span>}
+    </button>
   );
 }
 

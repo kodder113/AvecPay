@@ -4,12 +4,14 @@ import Link from "next/link";
 import QRCode from "qrcode";
 import { formatDateTime, formatMoney } from "@/lib/cobros/parse";
 import { METHOD_INFO, isMethod } from "@/lib/cobros/methods";
+import { addMoney } from "@/lib/cobros/tip";
 
 export interface ChargeView {
   id: string;
   code: string;
   status: "pending" | "paid" | "cancelled";
   amount: number | string;
+  tip_amount?: number | string | null;
   currency: string;
   description?: string | null;
   paid_method: string | null;
@@ -69,7 +71,12 @@ export function ChargeLive({ initial, businessName }: { initial: ChargeView; bus
         <div className="card space-y-3 border-emerald-300 bg-emerald-50 text-center">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500 text-5xl text-white">✓</div>
           <p className="text-sm font-semibold uppercase tracking-wide text-emerald-800">Pago confirmado</p>
-          <p className="text-4xl font-black">{formatMoney(charge.amount, charge.currency)}</p>
+          <p className="text-4xl font-black">{formatMoney(addMoney(charge.amount, charge.tip_amount ?? 0), charge.currency)}</p>
+          {Number(charge.tip_amount) > 0 && (
+            <p className="text-sm text-slate-700">
+              {formatMoney(charge.amount, charge.currency)} + propina <b>{formatMoney(charge.tip_amount!, charge.currency)}</b> 🎉
+            </p>
+          )}
           <p className="text-slate-700">
             de <b>{charge.payer_name ?? "Cliente"}</b>
             {isMethod(charge.paid_method) && <> · {METHOD_INFO[charge.paid_method].label}</>}

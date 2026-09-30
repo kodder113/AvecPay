@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     const input = body.parse(await req.json());
     const { data: merchant } = await supabase
       .from("merchants")
-      .select("id, currency, partner_id, merchant_methods(method, enabled)")
+      .select("id, currency, partner_id, tips_enabled, merchant_methods(method, enabled)")
       .eq("user_id", user.id)
       .maybeSingle();
     if (!merchant) return jsonError(400, "Primero configura tu comercio");
@@ -42,6 +42,7 @@ export async function POST(req: Request) {
           currency: merchant.currency,
           description: input.description || null,
           allowed_methods: allowed,
+          tips_allowed: merchant.tips_enabled,
         })
         .select("id, code")
         .single();

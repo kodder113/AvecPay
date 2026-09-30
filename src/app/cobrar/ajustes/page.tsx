@@ -7,7 +7,7 @@ export default async function AjustesPage() {
   const supabase = await createClient();
   const { data: merchant } = await supabase
     .from("merchants")
-    .select("business_name, partner_id, merchant_methods(method, enabled)")
+    .select("business_name, partner_id, tips_enabled, merchant_methods(method, enabled)")
     .maybeSingle();
   if (!merchant) redirect("/cobrar");
   const { data: partner } = await supabase.from("partners").select("allowed_methods").eq("id", merchant.partner_id).single();
@@ -16,7 +16,7 @@ export default async function AjustesPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Ajustes del comercio</h1>
-      <MerchantSettings initialName={merchant.business_name} allowed={allowed} enabled={enabled} submitLabel="Guardar" redirectTo="/cobrar" />
+      <MerchantSettings initialName={merchant.business_name} allowed={allowed} enabled={enabled} tipsEnabled={merchant.tips_enabled} submitLabel="Guardar" redirectTo="/cobrar" />
     </div>
   );
 }

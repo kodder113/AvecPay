@@ -16,7 +16,7 @@ export default async function PagarPage({ params }: { params: Promise<{ code: st
   const { data: charge } = valid
     ? await createAdminClient()
         .from("charges")
-        .select("code, status, amount, currency, description, allowed_methods, expires_at, merchants(business_name)")
+        .select("code, status, amount, currency, description, allowed_methods, tips_allowed, expires_at, merchants(business_name)")
         .eq("code", code)
         .maybeSingle()
     : { data: null };
@@ -63,6 +63,7 @@ export default async function PagarPage({ params }: { params: Promise<{ code: st
           businessName={businessName}
           methods={(charge.allowed_methods as string[]).filter(isMethod)}
           demoAccount={demoAccount}
+          tipsAllowed={charge.tips_allowed}
         />
       )}
     </div>

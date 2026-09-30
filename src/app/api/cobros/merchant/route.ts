@@ -7,6 +7,7 @@ import { handleRouteError, jsonError } from "@/lib/http";
 const body = z.object({
   businessName: z.string().trim().min(2).max(80),
   methods: z.array(z.enum(METHODS)),
+  tipsEnabled: z.boolean().default(true),
 });
 
 /** Create or update the signed-in user's merchant profile and method switches. */
@@ -19,12 +20,12 @@ export async function POST(req: Request) {
 
     let merchantId = existing?.id as string | undefined;
     if (merchantId) {
-      const { error } = await supabase.from("merchants").update({ business_name: input.businessName }).eq("id", merchantId);
+      const { error } = await supabase.from("merchants").update({ business_name: input.businessName, tips_enabled: input.tipsEnabled }).eq("id", merchantId);
       if (error) throw error;
     } else {
       const { data, error } = await supabase
         .from("merchants")
-        .insert({ user_id: user.id, business_name: input.businessName })
+        .insert({ user_id: user.id, business_name: input.businessName, tips_enabled: input.tipsEnabled })
         .select("id")
         .single();
       if (error || !data) throw error ?? new Error("No se pudo crear el comercio");

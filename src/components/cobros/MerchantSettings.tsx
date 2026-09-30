@@ -7,15 +7,17 @@ interface Props {
   initialName: string;
   allowed: Method[];
   enabled: Method[];
+  tipsEnabled?: boolean;
   submitLabel: string;
   redirectTo: string;
 }
 
 /** Business name + payment-method switches (only methods the partner allows). */
-export function MerchantSettings({ initialName, allowed, enabled, submitLabel, redirectTo }: Props) {
+export function MerchantSettings({ initialName, allowed, enabled, tipsEnabled = true, submitLabel, redirectTo }: Props) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
   const [on, setOn] = useState<Set<Method>>(new Set(enabled));
+  const [tips, setTips] = useState(tipsEnabled);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +36,7 @@ export function MerchantSettings({ initialName, allowed, enabled, submitLabel, r
     const res = await fetch("/api/cobros/merchant", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ businessName: name, methods: [...on] }),
+      body: JSON.stringify({ businessName: name, methods: [...on], tipsEnabled: tips }),
     });
     setBusy(false);
     if (!res.ok) return setError((await res.json().catch(() => ({}))).error ?? "No se pudo guardar");
@@ -63,6 +65,13 @@ export function MerchantSettings({ initialName, allowed, enabled, submitLabel, r
           </label>
         ))}
       </div>
+      <label className="card flex cursor-pointer items-center justify-between gap-3">
+        <span>
+          <span className="block font-semibold">Aceptar propinas</span>
+          <span className="block text-sm text-slate-500">El cliente puede agregar 10%, 15%, 20% o el monto que quiera.</span>
+        </span>
+        <input type="checkbox" className="h-6 w-6 accent-brand-ink" checked={tips} onChange={() => setTips(!tips)} />
+      </label>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <button className="btn-primary w-full" disabled={busy}>
         {busy ? "Guardando…" : submitLabel}

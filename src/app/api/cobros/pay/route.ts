@@ -5,7 +5,11 @@ import { METHODS } from "@/lib/cobros/methods";
 import { payErrorMessage } from "@/lib/cobros/parse";
 import { jsonError } from "@/lib/http";
 
-const body = z.object({ code: z.string().regex(/^[A-Za-z2-9]{8}$/), method: z.enum(METHODS) });
+const body = z.object({
+  code: z.string().regex(/^[A-Za-z2-9]{8}$/),
+  method: z.enum(METHODS),
+  tip: z.number().min(0).max(1_000_000).default(0),
+});
 
 /**
  * Demo payment: Banco Demo moves the fake money between the two users' demo
@@ -16,7 +20,11 @@ export async function POST(req: Request) {
   if (!user) return jsonError(401, payErrorMessage("not_authenticated"));
   const parsed = body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return jsonError(400, "Datos inválidos");
-  const { data, error } = await supabase.rpc("demo_pay_charge", { p_code: parsed.data.code, p_method: parsed.data.method });
+  const { data, error } = await supabase.rpc("demo_pay_charge", {
+    p_code: parsed.data.code,
+    p_method: parsed.data.method,
+    p_tip: parsed.data.tip,
+  });
   if (error) return jsonError(400, payErrorMessage(error.message));
   return NextResponse.json(data);
 }

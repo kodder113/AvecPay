@@ -8,7 +8,7 @@ export default async function ChargePage({ params }: { params: Promise<{ id: str
   const supabase = await createClient();
   const { data: charge } = await supabase
     .from("charges")
-    .select("id, code, status, amount, currency, description, paid_method, paid_reference, payer_name, paid_at, expires_at, merchants(business_name)")
+    .select("id, code, status, amount, tip_amount, currency, description, paid_method, paid_reference, payer_name, paid_at, expires_at, merchants(business_name)")
     .eq("id", id)
     .maybeSingle();
   if (!charge) notFound();
